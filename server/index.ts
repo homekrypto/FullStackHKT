@@ -373,8 +373,23 @@ import { uploadAgentPhoto } from './upload-middleware';
 
 app.post('/api/agents/register', uploadAgentPhoto, async (req, res) => {
   try {
-    const agentData = req.body;
+    console.log('Agent registration started:', req.body.email);
+    const rawAgentData = req.body;
     const uploadedFile = req.file;
+    
+    // Process FormData - convert JSON strings back to objects/arrays
+    const agentData = {
+      ...rawAgentData,
+      languagesSpoken: rawAgentData.languagesSpoken ? 
+        (typeof rawAgentData.languagesSpoken === 'string' ? 
+          JSON.parse(rawAgentData.languagesSpoken) : 
+          rawAgentData.languagesSpoken) : 
+        [],
+      yearsExperience: rawAgentData.yearsExperience ? 
+        parseInt(rawAgentData.yearsExperience) : 
+        0,
+      agreeToTerms: rawAgentData.agreeToTerms === 'true'
+    };
     
     // Only validate email is required - everything else is optional
     if (!agentData.email || !agentData.email.trim()) {
@@ -387,15 +402,33 @@ app.post('/api/agents/register', uploadAgentPhoto, async (req, res) => {
       return res.status(400).json({ error: 'Please enter a valid email address' });
     }
 
+    // Import dependencies once
+    const { executeQuery } = await import('./db-wrapper');
+    const { realEstateAgents } = await import('../shared/schema');
+    const { eq } = await import('drizzle-orm');
+    
+    // Check for duplicate email
+    try {
+      const existingAgent = await executeQuery(async (db) => {
+        const [agent] = await db.select().from(realEstateAgents)
+          .where(eq(realEstateAgents.email, agentData.email.toLowerCase().trim()));
+        return agent;
+      });
+      
+      if (existingAgent) {
+        return res.status(400).json({ 
+          error: 'An agent with this email address is already registered. Please use a different email or contact support if this is your account.' 
+        });
+      }
+    } catch (dbCheckError) {
+      console.log('Could not check for duplicate email (database issue), proceeding...');
+    }
+
     // Handle photo upload
     let photoUrl = null;
     if (uploadedFile) {
       photoUrl = `/agent-photos/${uploadedFile.filename}`;
     }
-
-    // Save agent to database first (before sending emails)
-    const { executeQuery } = await import('./db-wrapper');
-    const { realEstateAgents } = await import('../shared/schema');
     
     // Generate referral link if we have name and city
     let referralLink = null;
@@ -405,17 +438,26 @@ app.post('/api/agents/register', uploadAgentPhoto, async (req, res) => {
       referralLink = `homekrypto.com/agent/${base}-${randomSuffix}`;
     }
 
-    // Prepare agent data for database (only required fields to avoid schema issues)
+    // Prepare agent data for database
     const dbAgentData = {
       firstName: agentData.firstName || 'New',
       lastName: agentData.lastName || 'Agent', 
-      email: agentData.email,
+      email: agentData.email.toLowerCase().trim(),
       phone: agentData.phone || '+1-000-000-0000',
+      company: agentData.company || null,
       licenseNumber: agentData.licenseNumber || 'PENDING',
       licenseState: agentData.licenseState || 'PENDING',
       city: agentData.city || 'Not Specified',
       state: agentData.state || 'PENDING',
       zipCode: agentData.zipCode || '00000',
+      country: agentData.country || 'United States',
+      website: agentData.website || null,
+      linkedIn: agentData.linkedIn || null,
+      bio: agentData.bio || null,
+      specializations: agentData.specializations || null,
+      yearsExperience: agentData.yearsExperience || 0,
+      languagesSpoken: agentData.languagesSpoken || [],
+      seoBacklinkUrl: agentData.seoBacklinkUrl || null,
       status: 'pending' as const,
       isApproved: false,
       isActive: true,
@@ -546,7 +588,7 @@ app.post('/api/agents/register', uploadAgentPhoto, async (req, res) => {
         </div>
         ` : ''}
         
-        ${agentData.languagesSpoken && agentData.languagesSpoken.length > 0 ? `
+        ${agentData.languagesSpoken && Array.isArray(agentData.languagesSpoken) && agentData.languagesSpoken.length > 0 ? `
         <div style="background-color: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
           <h3 style="color: #0369a1; margin-top: 0;">Languages Spoken</h3>
           <p>${agentData.languagesSpoken.join(', ')}</p>
