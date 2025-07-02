@@ -60,10 +60,273 @@ import { eq, and } from 'drizzle-orm';
 app.use('/api/auth', databaseAuthRoutes);
 app.use('/api/admin/agents', adminAgentRoutes);
 
-// Agent pages endpoint
+// GET /api/agents/countries - Get list of countries with agents (MUST come before /api/agents/:slug)
+app.get('/api/agents/countries', async (req, res) => {
+  try {
+    const countries = await db
+      .selectDistinct({ country: realEstateAgents.country })
+      .from(realEstateAgents)
+      .where(and(
+        eq(realEstateAgents.status, 'approved'),
+        eq(realEstateAgents.isActive, true)
+      ))
+      .orderBy(realEstateAgents.country);
+
+    res.json({
+      success: true,
+      data: countries.map(c => c.country),
+      total: countries.length
+    });
+  } catch (error) {
+    console.error('Error fetching countries:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch countries' 
+    });
+  }
+});
+
+// GET /api/agents/search - Search agents by name, city, company (MUST come before /api/agents/:slug)
+app.get('/api/agents/search', async (req, res) => {
+  try {
+    const { q, country } = req.query;
+    
+    let whereConditions = and(
+      eq(realEstateAgents.status, 'approved'),
+      eq(realEstateAgents.isActive, true)
+    );
+
+    // Add country filter if provided
+    if (country && country !== 'all') {
+      whereConditions = and(
+        eq(realEstateAgents.status, 'approved'),
+        eq(realEstateAgents.isActive, true),
+        eq(realEstateAgents.country, country as string)
+      );
+    }
+
+    const allAgents = await db
+      .select()
+      .from(realEstateAgents)
+      .where(whereConditions)
+      .orderBy(realEstateAgents.firstName);
+
+    // Filter by search query if provided
+    let filteredAgents = allAgents;
+    if (q && typeof q === 'string') {
+      const searchTerm = q.toLowerCase();
+      filteredAgents = allAgents.filter(agent => 
+        agent.firstName?.toLowerCase().includes(searchTerm) ||
+        agent.lastName?.toLowerCase().includes(searchTerm) ||
+        agent.city?.toLowerCase().includes(searchTerm) ||
+        agent.company?.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    res.json({
+      success: true,
+      data: filteredAgents,
+      total: filteredAgents.length
+    });
+  } catch (error) {
+    console.error('Error searching agents:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to search agents' 
+    });
+  }
+});
+
+// GET /api/agents/approved - Legacy endpoint for backward compatibility
+app.get('/api/agents/approved', async (req, res) => {
+  try {
+    const agents = await db
+      .select()
+      .from(realEstateAgents)
+      .where(and(
+        eq(realEstateAgents.status, 'approved'),
+        eq(realEstateAgents.isActive, true)
+      ))
+      .orderBy(realEstateAgents.firstName);
+
+    res.json({
+      success: true,
+      data: agents,
+      total: agents.length
+    });
+  } catch (error) {
+    console.error('Error fetching approved agents:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch approved agents' 
+    });
+  }
+});
+
+// Public agents endpoints
+// GET /api/agents - Get all approved agents for public directory
+app.get('/api/agents', async (req, res) => {
+  try {
+    const agents = await db
+      .select({
+        id: realEstateAgents.id,
+        firstName: realEstateAgents.firstName,
+        lastName: realEstateAgents.lastName,
+        email: realEstateAgents.email,
+        company: realEstateAgents.company,
+        city: realEstateAgents.city,
+        state: realEstateAgents.state,
+        country: realEstateAgents.country,
+        bio: realEstateAgents.bio,
+        specializations: realEstateAgents.specializations,
+        yearsExperience: realEstateAgents.yearsExperience,
+        languagesSpoken: realEstateAgents.languagesSpoken,
+        profileImage: realEstateAgents.profileImage,
+        website: realEstateAgents.website,
+        linkedIn: realEstateAgents.linkedIn,
+        referralLink: realEstateAgents.referralLink
+      })
+      .from(realEstateAgents)
+      .where(and(
+        eq(realEstateAgents.status, 'approved'),
+        eq(realEstateAgents.isActive, true)
+      ))
+      .orderBy(realEstateAgents.firstName);
+
+    res.json({
+      success: true,
+      data: agents,
+      total: agents.length
+    });
+  } catch (error) {
+    console.error('Error fetching agents:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch agents' 
+    });
+  }
+});
+
+// GET /api/agents/approved - Legacy endpoint for backward compatibility
+app.get('/api/agents/approved', async (req, res) => {
+  try {
+    const agents = await db
+      .select()
+      .from(realEstateAgents)
+      .where(and(
+        eq(realEstateAgents.status, 'approved'),
+        eq(realEstateAgents.isActive, true)
+      ))
+      .orderBy(realEstateAgents.firstName);
+
+    res.json({
+      success: true,
+      data: agents,
+      total: agents.length
+    });
+  } catch (error) {
+    console.error('Error fetching approved agents:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch approved agents' 
+    });
+  }
+});
+
+// GET /api/agents/countries - Get list of countries with agents
+app.get('/api/agents/countries', async (req, res) => {
+  try {
+    const countries = await db
+      .selectDistinct({ country: realEstateAgents.country })
+      .from(realEstateAgents)
+      .where(and(
+        eq(realEstateAgents.status, 'approved'),
+        eq(realEstateAgents.isActive, true)
+      ))
+      .orderBy(realEstateAgents.country);
+
+    res.json({
+      success: true,
+      data: countries.map(c => c.country),
+      total: countries.length
+    });
+  } catch (error) {
+    console.error('Error fetching countries:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch countries' 
+    });
+  }
+});
+
+// GET /api/agents/search - Search agents by name, city, company
+app.get('/api/agents/search', async (req, res) => {
+  try {
+    const { q, country } = req.query;
+    
+    let whereConditions = and(
+      eq(realEstateAgents.status, 'approved'),
+      eq(realEstateAgents.isActive, true)
+    );
+
+    // Add country filter if provided
+    if (country && country !== 'all') {
+      whereConditions = and(
+        eq(realEstateAgents.status, 'approved'),
+        eq(realEstateAgents.isActive, true),
+        eq(realEstateAgents.country, country as string)
+      );
+    }
+
+    const agents = await db
+      .select()
+      .from(realEstateAgents)
+      .where(whereConditions)
+      .orderBy(realEstateAgents.firstName);
+
+
+
+    // Filter by search query if provided
+    let filteredAgents = agents;
+    if (q && typeof q === 'string') {
+      const searchTerm = q.toLowerCase();
+      filteredAgents = agents.filter(agent => 
+        agent.firstName?.toLowerCase().includes(searchTerm) ||
+        agent.lastName?.toLowerCase().includes(searchTerm) ||
+        agent.city?.toLowerCase().includes(searchTerm) ||
+        agent.company?.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    res.json({
+      success: true,
+      data: filteredAgents,
+      total: filteredAgents.length
+    });
+  } catch (error) {
+    console.error('Error searching agents:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to search agents' 
+    });
+  }
+});
+
+
+
+// Agent pages endpoint - MUST come AFTER all specific routes
 app.get('/api/agents/:slug', async (req, res) => {
   try {
     const slug = req.params.slug;
+    
+    // Handle country-based URLs like "united-states/john-smith"
+    const slugParts = slug.split('/');
+    let searchSlug = slug;
+    
+    // If it's a country/agent structure, use the full path
+    if (slugParts.length === 2) {
+      searchSlug = slug; // Keep full country/agent path
+    }
     
     // Get agent page by slug with agent details
     const [agentPage] = await db
@@ -71,7 +334,7 @@ app.get('/api/agents/:slug', async (req, res) => {
       .from(agentPages)
       .leftJoin(realEstateAgents, eq(agentPages.agentId, realEstateAgents.id))
       .where(and(
-        eq(agentPages.slug, slug),
+        eq(agentPages.slug, searchSlug),
         eq(agentPages.isActive, true),
         eq(realEstateAgents.status, 'approved')
       ));

@@ -88,6 +88,7 @@ function Router() {
       <Route path="/join-waitlist" component={JoinWaitlist} />
       <Route path="/agent-registration" component={AgentRegistration} />
       <Route path="/agents" component={Agents} />
+      <Route path="/agents/:country/:slug" component={AgentPage} />
       <Route path="/agents/:slug" component={AgentPage} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />

@@ -7,13 +7,29 @@ import { sendHostingerEmail } from '../hostinger-email';
 
 const router = Router();
 
-// Utility function to generate SEO-friendly slug
-function generateSlug(firstName: string, lastName: string): string {
+// Utility function to generate country slug
+function generateCountrySlug(country: string): string {
+  return country.toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
+}
+
+// Utility function to generate SEO-friendly agent slug
+function generateAgentSlug(firstName: string, lastName: string): string {
   return `${firstName}-${lastName}`.toLowerCase()
     .replace(/[^a-z0-9\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .trim();
+}
+
+// Utility function to generate full country-based slug  
+function generateCountryBasedSlug(firstName: string, lastName: string, country: string): string {
+  const countrySlug = generateCountrySlug(country);
+  const agentSlug = generateAgentSlug(firstName, lastName);
+  return `${countrySlug}/${agentSlug}`;
 }
 
 // Utility function to generate agent page content
@@ -251,13 +267,13 @@ router.patch('/:id/approve', requireAdmin, async (req: any, res) => {
       .where(eq(realEstateAgents.id, agentId))
       .returning();
 
-    // Generate SEO-friendly slug
-    const slug = generateSlug(agent.firstName, agent.lastName);
+    // Generate country-based SEO-friendly slug
+    const slug = generateCountryBasedSlug(agent.firstName, agent.lastName, agent.country);
     
-    // Create agent page
-    const seoTitle = `${agent.firstName} ${agent.lastName} - Crypto & Real Estate Investment Expert | HomeKrypto`;
-    const seoDescription = `Invest in real estate with cryptocurrency through ${agent.firstName} ${agent.lastName}. Professional crypto real estate investment services with HomeKrypto platform.`;
-    const seoKeywords = `crypto real estate, cryptocurrency property investment, ${agent.firstName} ${agent.lastName}, HomeKrypto agent, blockchain real estate`;
+    // Create agent page with country-specific SEO
+    const seoTitle = `${agent.firstName} ${agent.lastName} - Crypto Real Estate Agent in ${agent.country} | HomeKrypto`;
+    const seoDescription = `Connect with ${agent.firstName} ${agent.lastName}, licensed crypto real estate professional in ${agent.country}. Invest in property with cryptocurrency through HomeKrypto.`;
+    const seoKeywords = `crypto real estate ${agent.country}, cryptocurrency property investment ${agent.country}, ${agent.firstName} ${agent.lastName}, HomeKrypto agent ${agent.country}, blockchain real estate`;
     const pageContent = generateAgentPageContent(agent);
 
     const [agentPage] = await db

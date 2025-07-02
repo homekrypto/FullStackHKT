@@ -45,9 +45,18 @@ export default function Agents() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('');
 
-  const { data: agents = [], isLoading } = useQuery({
-    queryKey: ['/api/agents/approved'],
+  // Fetch approved agents
+  const { data: agentsResponse, isLoading } = useQuery({
+    queryKey: ['/api/agents'],
   });
+
+  // Fetch list of countries with agents
+  const { data: countriesResponse } = useQuery({
+    queryKey: ['/api/agents/countries'],
+  });
+
+  const agents = (agentsResponse as any)?.data || [];
+  const countries = (countriesResponse as any)?.data || [];
 
   // Filter agents based on search criteria
   const filteredAgents = agents.filter((agent: Agent) => {
@@ -61,8 +70,8 @@ export default function Agents() {
     return matchesSearch && matchesCountry;
   });
 
-  // Get unique countries for filters
-  const uniqueCountries = [...new Set(agents.map((agent: Agent) => agent.country))].sort();
+  // Use countries from API, fallback to unique countries from agents
+  const uniqueCountries = countries.length > 0 ? countries : Array.from(new Set(agents.map((agent: Agent) => agent.country))).sort();
 
   if (isLoading) {
     return (
@@ -144,7 +153,7 @@ export default function Agents() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
                 >
                   <option value="">All Countries</option>
-                  {uniqueCountries.map(country => (
+                  {uniqueCountries.map((country: string) => (
                     <option key={country} value={country}>{country}</option>
                   ))}
                 </select>

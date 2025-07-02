@@ -1,0 +1,103 @@
+"I need to fix my agent directory system and implement proper country-based organization. Currently having several issues that need immediate resolution.
+
+**CURRENT PROBLEMS TO FIX:**
+
+1. **Agent Directory Not Showing Approved Agents:**
+   - /agents page shows "0 Verified Agents" even after approving agents
+   - Approved agents not appearing in the agent list
+   - Need to fix the database query to show only approved agents
+
+2. **404 Error on Agent Pages:**
+   - Agent page URLs are malformed: /agents/new agent/ (with spaces)
+   - Need proper URL slug generation without spaces
+   - Agent pages returning 404 errors
+
+3. **URL Structure Reorganization:**
+   - Current: /agents/[agent-slug]
+   - Wanted: /agents/[country]/[agent-slug]
+   - Example: /agents/united-states/john-smith or /agents/poland/maria-kowalski
+
+**NEW FEATURES TO IMPLEMENT:**
+
+**1. COUNTRY-BASED AGENT ORGANIZATION:**
+- Reorganize agent pages by country: /agents/[country]/[agent-slug]
+- Add country field to agent registration form
+- Update database schema to include country information
+- Generate country-specific slugs (e.g., "united-states", "poland", "germany")
+
+**2. FUNCTIONAL AGENT SEARCH SYSTEM:**
+Make the search on /agents page fully functional:
+- Search by agent name (first name + last name)
+- Search by city
+- Search by company name
+- Country filter dropdown with actual countries from database
+- Real-time search results
+- "Clear Filters" button functionality
+
+**3. AGENT DIRECTORY PAGE FIXES:**
+- Fix agent count display (show actual number of approved agents)
+- Fix countries covered count (show actual countries with agents)
+- Display approved agents in the directory
+- Show proper agent cards with photos and details
+
+**4. DATABASE & BACKEND UPDATES:**
+
+**Database Changes Needed:**
+- Add country, city, company fields to real_estate_agents table
+- Update agent_pages table to include country-based slug structure
+- Add indexes for efficient searching
+
+**API Endpoints to Fix/Create:**
+- Fix: GET /api/agents (return approved agents with country info)
+- Fix: GET /agents/[country]/[agent-slug] (country-based agent pages)
+- Add: GET /api/agents/countries (get list of countries with agents)
+- Add: GET /api/agents/search (search functionality)
+
+**5. URL SLUG GENERATION FIX:**
+- Fix slug generation to remove spaces and special characters
+- Format: "first-name-last-name" (all lowercase, hyphens only)
+- Country slugs: "united-states", "poland", "germany", etc.
+
+**6. SEO IMPROVEMENTS FOR COUNTRY PAGES:**
+- Create country-specific SEO meta tags
+- Title: "[Agent Name] - Crypto Real Estate Agent in [Country] | HomeKrypto"
+- Description: "Connect with [Agent Name], licensed crypto real estate professional in [Country]. Invest in property with cryptocurrency through HomeKrypto."
+- Keywords: "crypto real estate [country], cryptocurrency property investment [country], [agent name]"
+
+**7. EMAIL NOTIFICATION FIX:**
+- Update approval email to include correct country-based URL
+- Example: "Your agent page is now live at: https://homekrypto.com/agents/poland/jan-kowalski"
+
+**8. FRONTEND COMPONENTS TO UPDATE:**
+- /agents page: Fix agent listing and search functionality
+- Agent registration form: Add country and city fields
+- Agent page template: Update for country-based URLs
+- Navigation: Update "View Our Agents" button link
+
+**SPECIFIC REQUIREMENTS:**
+
+**Agent Registration Form Updates:**
+- Add required country dropdown (populated from database)
+- Add city text field
+- Add company name field (optional)
+- Update form validation
+
+**Search Functionality:**
+- Real-time search as user types
+- Filter by country dropdown
+- Search across: firstName, lastName, city, company
+- Sort results alphabetically
+- Show "No results found" when appropriate
+
+**Agent Directory Display:**
+- Show agent cards with: photo, name, city, country, company
+- Display actual count of verified agents
+- Display actual count of countries covered
+- Calculate and display actual average commission
+
+**Error Handling:**
+- Proper 404 pages for non-existent agents
+- Handle invalid country URLs
+- Validate slug formats
+
+Please implement this complete system with proper error handling, database migrations, and ensure all URLs work correctly with the new country-based structure."

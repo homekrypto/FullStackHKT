@@ -70,12 +70,15 @@ async function fetchAgentPage(slug: string): Promise<AgentPage> {
 }
 
 export default function AgentPage() {
-  const { slug } = useParams() as { slug: string };
+  const { slug, country } = useParams() as { slug: string; country?: string };
+  
+  // Handle both /agents/:slug and /agents/:country/:slug
+  const fullSlug = country ? `${country}/${slug}` : slug;
   
   const { data: agentPage, isLoading, error } = useQuery({
-    queryKey: [`/api/agents/${slug}`],
-    queryFn: () => fetchAgentPage(slug),
-    enabled: !!slug,
+    queryKey: [`/api/agents/${fullSlug}`],
+    queryFn: () => fetchAgentPage(fullSlug),
+    enabled: !!fullSlug,
   });
 
   if (isLoading) {
