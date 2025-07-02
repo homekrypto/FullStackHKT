@@ -320,6 +320,7 @@ export const realEstateAgents = pgTable("real_estate_agents", {
   yearsExperience: integer("years_experience"),
   languagesSpoken: text("languages_spoken").array(),
   profileImage: varchar("profile_image", { length: 500 }),
+  photoUrl: varchar("photo_url", { length: 255 }),
   referralLink: varchar("referral_link", { length: 500 }).unique(),
   seoBacklinkUrl: varchar("seo_backlink_url", { length: 500 }),
   status: varchar("status", { length: 20 }).notNull().default('pending'), // 'pending', 'approved', 'denied'

@@ -24,7 +24,8 @@ import {
   Edit,
   Eye,
   Calendar,
-  DollarSign
+  DollarSign,
+  Trash2
 } from 'lucide-react';
 
 interface Agent {
@@ -123,6 +124,27 @@ export default function AdminAgentManagement() {
     }
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (agentId: number) => {
+      const response = await apiRequest('DELETE', `/api/admin/agents/${agentId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/agents'] });
+      toast({
+        title: 'Agent Deleted',
+        description: 'The agent has been permanently removed and notified via email.',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Deletion Failed',
+        description: error.message,
+        variant: 'destructive'
+      });
+    }
+  });
+
   const handleApprove = (agentId: number) => {
     approveMutation.mutate(agentId);
   };
@@ -137,6 +159,12 @@ export default function AdminAgentManagement() {
       return;
     }
     rejectMutation.mutate({ agentId, reason: rejectionReason });
+  };
+
+  const handleDelete = (agentId: number, agentName: string) => {
+    if (window.confirm(`Are you sure you want to permanently delete ${agentName}? This action cannot be undone and the agent will be notified.`)) {
+      deleteMutation.mutate(agentId);
+    }
   };
 
   const filteredAgents = agents.filter((agent: Agent) => {
@@ -478,6 +506,19 @@ export default function AdminAgentManagement() {
                       </DialogContent>
                     </Dialog>
                   </>
+                )}
+
+                {/* Delete Action for Approved Agents */}
+                {agent.status === 'approved' && (
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={() => handleDelete(agent.id, `${agent.firstName} ${agent.lastName}`)}
+                    disabled={deleteMutation.isPending}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Agent
+                  </Button>
                 )}
               </div>
             </CardContent>

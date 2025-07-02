@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { randomBytes } from 'crypto';
 import { z } from 'zod';
 import { db } from './db-direct';
 import { users, sessions, passwordResets, emailVerifications } from '@shared/schema';
@@ -474,6 +475,73 @@ router.get('/verify-email', async (req, res) => {
     res.redirect('/dashboard');
   } catch (error) {
     console.error('Email verification error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// RESEND VERIFICATION EMAIL
+router.post('/resend-verification', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Check if user exists
+    const [user] = await db.select().from(users).where(eq(users.email, normalizedEmail));
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if already verified
+    if (user.isEmailVerified) {
+      return res.status(400).json({ message: 'Email is already verified' });
+    }
+
+    // Delete existing verification token
+    await db.delete(emailVerifications).where(eq(emailVerifications.userId, user.id));
+
+    // Create new verification token
+    const verificationToken = randomBytes(32).toString('hex');
+    await db.insert(emailVerifications).values({
+      userId: user.id,
+      token: verificationToken,
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+    });
+
+    // Send verification email
+    try {
+      const verificationUrl = `${req.protocol}://${req.get('host')}/api/auth/verify-email?token=${verificationToken}`;
+      const emailHtml = `
+        <h2>Email Verification - HKT Platform</h2>
+        <p>Hello ${user.firstName || 'User'},</p>
+        <p>Please verify your email address to complete your registration:</p>
+        <a href="${verificationUrl}" style="background: #d4af37; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;">Verify Email</a>
+        <p>Or copy this link: ${verificationUrl}</p>
+        <p>This link expires in 24 hours.</p>
+      `;
+      
+      await sendHostingerEmail({
+        to: normalizedEmail,
+        subject: 'HKT Platform - Verify Your Email',
+        html: emailHtml
+      });
+
+      res.json({ 
+        message: 'Verification email sent successfully',
+        email: normalizedEmail
+      });
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      res.status(500).json({ message: 'Failed to send verification email' });
+    }
+
+  } catch (error) {
+    console.error('Resend verification error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

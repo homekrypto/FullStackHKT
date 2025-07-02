@@ -513,4 +513,121 @@ router.patch('/:id/deny', requireAdmin, async (req: any, res) => {
   }
 });
 
+// DELETE /api/admin/agents/:id - Delete agent (requires admin authentication)
+router.delete('/:id', requireAdmin, async (req: any, res) => {
+  try {
+    const agentId = parseInt(req.params.id);
+    
+    if (isNaN(agentId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid agent ID'
+      });
+    }
+
+    // Get agent details before deletion
+    const [agent] = await db
+      .select()
+      .from(realEstateAgents)
+      .where(eq(realEstateAgents.id, agentId));
+
+    if (!agent) {
+      return res.status(404).json({
+        success: false,
+        message: 'Agent not found'
+      });
+    }
+
+    // Delete agent page if exists
+    await db
+      .delete(agentPages)
+      .where(eq(agentPages.agentId, agentId));
+
+    // Delete agent from database
+    await db
+      .delete(realEstateAgents)
+      .where(eq(realEstateAgents.id, agentId));
+
+    // Send deletion notification email
+    try {
+      const deletionEmailHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>HomeKrypto Agent Application Status Update</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #dc2626; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; background: #f9f9f9; }
+            .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h2>🚨 Agent Application Removed</h2>
+            </div>
+            
+            <div class="content">
+              <p>Hello ${agent.firstName} ${agent.lastName},</p>
+              
+              <p>We are writing to inform you that your agent application has been removed from the HomeKrypto platform.</p>
+              
+              <p><strong>Reason for removal:</strong> Your agent application has been removed due to terms and conditions or policy violations.</p>
+              
+              <p>This decision was made after careful review of our platform policies and requirements.</p>
+              
+              <p>If you have questions about this decision or believe this removal was made in error, please contact our support team immediately.</p>
+              
+              <div style="background: #f0f0f0; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <p><strong>📞 Support Contact:</strong><br>
+                Email: <a href="mailto:support@homekrypto.com">support@homekrypto.com</a><br>
+                Subject: Agent Application Removal Review - ${agent.firstName} ${agent.lastName}</p>
+              </div>
+              
+              <p>Thank you for your understanding.</p>
+              
+              <p>Best regards,<br>
+              <strong>The HomeKrypto Team</strong><br>
+              <a href="https://homekrypto.com">HomeKrypto.com</a></p>
+            </div>
+            
+            <div class="footer">
+              <p>This email was sent because your agent application was removed from HomeKrypto.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      await sendHostingerEmail({
+        to: agent.email,
+        subject: '🚨 HomeKrypto Agent Application Status Update',
+        html: deletionEmailHtml
+      });
+
+      console.log(`Agent deletion email sent to: ${agent.email}`);
+    } catch (emailError) {
+      console.error('Failed to send deletion email:', emailError);
+    }
+
+    res.json({
+      success: true,
+      message: 'Agent deleted successfully and notification email sent',
+      data: {
+        deletedAgent: agent
+      }
+    });
+  } catch (error) {
+    console.error('Error deleting agent:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete agent',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 export default router;

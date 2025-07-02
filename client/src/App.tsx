@@ -21,6 +21,7 @@ import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 import Profile from "@/pages/profile";
 import EmailVerified from "@/pages/email-verified-simple";
+import EmailVerification from "@/pages/EmailVerification";
 import TermsAndConditions from "@/pages/terms-and-conditions";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import Whitepaper from "@/pages/whitepaper";
@@ -95,6 +96,7 @@ function Router() {
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password/:token" component={ResetPassword} />
       <Route path="/verify-email" component={EmailVerified} />
+      <Route path="/email-verification" component={EmailVerification} />
       <Route path="/email-verification-success" component={EmailVerificationSuccess} />
       <Route path="/buy-hkt" component={BuyHKT} />
       <Route path="/blog" component={Blog} />

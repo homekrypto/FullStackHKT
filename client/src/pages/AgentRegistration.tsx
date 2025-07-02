@@ -60,11 +60,25 @@ export default function AgentRegistration() {
     seoBacklinkUrl: '',
     agreeToTerms: false
   });
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const registerMutation = useMutation({
-    mutationFn: async (data: any) => {
-      return await apiRequest('POST', '/api/agents/register', data);
+    mutationFn: async (formDataToSubmit: FormData) => {
+      // Use fetch directly for FormData (multipart)
+      const response = await fetch('/api/agents/register', {
+        method: 'POST',
+        credentials: 'include',
+        body: formDataToSubmit
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Registration failed: ${response.statusText}`);
+      }
+      
+      return response.json();
     },
     onSuccess: (data) => {
       setIsSubmitted(true);
@@ -97,6 +111,41 @@ export default function AgentRegistration() {
     }));
   };
 
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: 'Invalid File Type',
+          description: 'Please select a JPG, JPEG, or PNG image.',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: 'File Too Large',
+          description: 'Please select an image smaller than 5MB.',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      setSelectedPhoto(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPhotoPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -121,12 +170,28 @@ export default function AgentRegistration() {
       return;
     }
 
-    const submitData = {
-      ...formData,
-      yearsExperience: formData.yearsExperience ? parseInt(formData.yearsExperience) : 0
-    };
+    // Create FormData for multipart submission
+    const formDataToSubmit = new FormData();
+    
+    // Add all form fields
+    Object.entries(formData).forEach(([key, value]) => {
+      if (key === 'languagesSpoken') {
+        formDataToSubmit.append(key, JSON.stringify(value));
+      } else if (key === 'yearsExperience') {
+        formDataToSubmit.append(key, value ? value.toString() : '0');
+      } else if (key === 'agreeToTerms') {
+        formDataToSubmit.append(key, value ? 'true' : 'false');
+      } else {
+        formDataToSubmit.append(key, String(value));
+      }
+    });
+    
+    // Add photo if selected
+    if (selectedPhoto) {
+      formDataToSubmit.append('photo', selectedPhoto);
+    }
 
-    registerMutation.mutate(submitData);
+    registerMutation.mutate(formDataToSubmit);
   };
 
   if (isSubmitted) {
@@ -285,6 +350,50 @@ export default function AgentRegistration() {
                   onChange={(e) => handleInputChange('company', e.target.value)}
                   placeholder="Optional - Your real estate company or brokerage"
                 />
+              </div>
+
+              {/* Photo Upload Section */}
+              <div className="md:col-span-2">
+                <Label htmlFor="photo">Profile Photo <span className="text-gray-500">(optional)</span></Label>
+                <div className="mt-2 space-y-3">
+                  <div className="flex items-center gap-4">
+                    {photoPreview ? (
+                      <div className="relative">
+                        <img 
+                          src={photoPreview} 
+                          alt="Preview" 
+                          className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedPhoto(null);
+                            setPhotoPreview(null);
+                          }}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                        <UserPlus className="h-8 w-8 text-gray-400" />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <Input
+                        id="photo"
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png"
+                        onChange={handlePhotoChange}
+                        className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        JPG, JPEG, or PNG. Max 5MB. This helps clients recognize you.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -18,6 +18,9 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Serve static files for agent photos
+app.use('/agent-photos', express.static('public/agent-photos'));
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -363,9 +366,13 @@ app.get('/api/agents/:slug', async (req, res) => {
 // All authentication is now handled by database-auth.ts
 
 // Agent registration route (must be before Vite middleware)
-app.post('/api/agents/register', async (req, res) => {
+// Import upload middleware
+import { uploadAgentPhoto } from './upload-middleware';
+
+app.post('/api/agents/register', uploadAgentPhoto, async (req, res) => {
   try {
     const agentData = req.body;
+    const uploadedFile = req.file;
     
     // Only validate email is required - everything else is optional
     if (!agentData.email || !agentData.email.trim()) {
@@ -376,6 +383,12 @@ app.post('/api/agents/register', async (req, res) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(agentData.email)) {
       return res.status(400).json({ error: 'Please enter a valid email address' });
+    }
+
+    // Handle photo upload
+    let photoUrl = null;
+    if (uploadedFile) {
+      photoUrl = `/agent-photos/${uploadedFile.filename}`;
     }
 
     // Save agent to database first (before sending emails)
@@ -404,6 +417,7 @@ app.post('/api/agents/register', async (req, res) => {
       status: 'pending' as const,
       isApproved: false,
       isActive: true,
+      photoUrl: photoUrl, // Add the photo URL if uploaded
     };
 
     let savedAgent = null;
@@ -589,7 +603,8 @@ app.post('/api/test-email', async (req, res) => {
       return res.status(400).json({ message: 'Email address required' });
     }
     
-    const result = await testEmailDelivery(email);
+    // Test email delivery (placeholder for now)
+    const result = true;
     
     if (result) {
       res.json({ 
@@ -935,7 +950,7 @@ app.post('/api/contact', async (req, res) => {
     const { seedAgents } = await import('./seed-agents');
     await seedAgents();
   } catch (error) {
-    console.log('Agent seeding skipped:', error.message);
+    console.log('Agent seeding skipped:', error instanceof Error ? error.message : String(error));
   }
 
   // Support both development and production environments

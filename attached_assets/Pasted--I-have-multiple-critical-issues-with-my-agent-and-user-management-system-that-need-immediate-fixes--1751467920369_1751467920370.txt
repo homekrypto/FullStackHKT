@@ -1,0 +1,204 @@
+"I have multiple critical issues with my agent and user management system that need immediate fixes and new features implementation. Please implement everything in this comprehensive prompt.
+
+**CRITICAL ISSUES TO FIX:**
+
+**1. AGENT APPROVAL SYSTEM NOT WORKING:**
+- No agent page is created when I approve an agent
+- No confirmation email sent to agent with page link
+- Agent approval process appears to complete but nothing happens
+- Need to debug and fix the entire approval workflow
+
+**2. MISSING AGENT DELETION SYSTEM:**
+Need to implement agent deletion in /admin/agents:
+- Add "Delete Agent" button for each approved agent
+- Send email notification to deleted agent explaining:
+  * "Your agent application has been removed due to terms and conditions or policy violations"
+  * "Contact support@homekrypto.com if you have questions"
+  * Professional email template with HomeKrypto branding
+- Only show delete option for previously approved agents
+
+**3. AGENT PROFILE MISSING PHONE NUMBER:**
+- Agent profiles in /agents don't display phone numbers
+- Need to add phone field to registration form
+- Display phone number in agent profile pages
+- Make phone number clickable (tel: link)
+
+**4. AGENT PHOTO SYSTEM (OPTIONAL UPLOAD):**
+Current system shows initials in round space - need photo upload:
+- Add photo upload field to agent registration form (OPTIONAL - NOT REQUIRED)
+- Create new directory: `/uploads/agent-photos/` or `/public/agent-photos/`
+- Store agent photos securely with proper naming convention
+- Display actual agent photos instead of initials when available
+- Fallback to initials if no photo uploaded
+- Image optimization and proper sizing
+
+**5. EMAIL VERIFICATION ISSUES:**
+- "Resend verification email" button doesn't work
+- Need to fix email verification resend functionality
+- Test entire email verification workflow
+
+**6. PASSWORD RESET PAGE PROBLEMS:**
+- After password reset, redirects to /api/auth/reset-password
+- Page shows "password reset successful" on black background
+- No proper design/theme applied
+- No automatic redirection to login page
+- Missing confirmation email to user
+
+**SPECIFIC IMPLEMENTATIONS NEEDED:**
+
+**1. FIX AGENT APPROVAL WORKFLOW:**
+```javascript
+// Debug and fix the agent approval process
+- Check PATCH /api/admin/agents/:id/approve endpoint
+- Ensure agent page creation in agent_pages table
+- Fix email sending with correct agent page URL
+- Test complete workflow from approval to email delivery
+2. IMPLEMENT AGENT DELETION SYSTEM:
+javascript// New API endpoint needed
+DELETE /api/admin/agents/:id
+- Remove agent from database
+- Send deletion notification email
+- Update admin panel with delete buttons
+- Add confirmation dialog before deletion
+3. DATABASE SCHEMA UPDATES:
+sql-- Add missing fields (phone is required, photo is optional)
+ALTER TABLE real_estate_agents ADD COLUMN phone VARCHAR(20) NOT NULL;
+ALTER TABLE real_estate_agents ADD COLUMN photo_url VARCHAR(255) NULL;
+-- Add index for faster queries
+CREATE INDEX idx_agents_photo ON real_estate_agents(photo_url);
+4. PHOTO UPLOAD SYSTEM IMPLEMENTATION:
+javascript// Photo upload specifications (OPTIONAL)
+- Maximum file size: 5MB
+- Allowed formats: .jpg, .jpeg, .png only
+- Create directory: /uploads/agent-photos/ or /public/agent-photos/
+- Image validation before upload
+- Automatic image resizing/optimization
+- Secure filename generation: agent-[id]-[timestamp].[extension]
+- Proper folder permissions for file uploads
+5. FIX EMAIL VERIFICATION:
+javascript// Fix resend verification endpoint
+POST /api/auth/resend-verification
+- Debug current email verification system
+- Fix resend button functionality
+- Test email delivery
+6. COMPLETE PASSWORD RESET REDESIGN:
+javascript// Password reset page improvements
+- Create proper success page with theme
+- Add 5-second countdown redirect to login
+- Send confirmation email to user
+- Include security warning in email
+- Professional email template
+DETAILED REQUIREMENTS:
+Agent Registration Form Updates:
+
+Add phone number field (REQUIRED, with validation)
+Add photo upload field (OPTIONAL - Label: "Profile Photo (Optional)")
+Show file size limit and format requirements
+Preview uploaded image before submission
+Update form validation and submission
+Handle multipart/form-data for file uploads
+
+Photo Display Logic:
+javascript// Display logic for agent photos
+if (agent.photo_url) {
+  // Show actual agent photo
+  <img src={agent.photo_url} alt={agent.firstName + ' ' + agent.lastName} 
+       className="w-full h-full object-cover rounded-full" />
+} else {
+  // Show initials fallback
+  <div className="initials-circle bg-blue-500 text-white flex items-center justify-center rounded-full">
+    {agent.firstName[0]}{agent.lastName[0]}
+  </div>
+}
+Admin Panel Enhancements:
+
+Add "Delete Agent" button (red, with confirmation dialog)
+Show deletion confirmation
+Display proper error/success messages
+Update agent list after deletion
+Only show delete button for approved agents
+
+Agent Profile Display:
+
+Show agent photo (circular, professional styling)
+Display phone number with click-to-call functionality: <a href="tel:${agent.phone}">{agent.phone}</a>
+Proper fallback for missing photos
+Responsive design for mobile
+
+Email Templates Needed:
+
+Agent Deletion Email:
+
+Subject: "HomeKrypto Agent Application Status Update"
+Professional template explaining removal
+"Your agent application has been removed due to terms and conditions or policy violations"
+"Contact support@homekrypto.com if you have questions"
+HomeKrypto branding
+
+
+Password Change Confirmation:
+
+Subject: "Password Changed Successfully - HomeKrypto"
+Confirmation of password change
+Security warning: "If you didn't make this change, contact support immediately"
+Support contact for security concerns
+
+
+
+Password Reset Success Page:
+
+Match site theme and design
+Professional success message
+5-second countdown timer with visual countdown
+Automatic redirect to login page
+Clear call-to-action button
+Proper styling consistent with site theme
+
+File Upload Security:
+
+Validate file types on both frontend and backend
+Sanitize filenames to prevent directory traversal
+Store files with secure naming convention
+Implement proper access controls
+Add image optimization to reduce file sizes
+Handle upload failures gracefully
+
+API Endpoint Updates:
+javascript// Update agent registration endpoint
+POST /api/auth/register
+- Handle multipart/form-data for file uploads
+- Process photo upload if provided (optional)
+- Validate phone number format
+- Save photo_url in database (nullable)
+- Return success even if photo upload fails (it's optional)
+
+// New deletion endpoint
+DELETE /api/admin/agents/:id
+- Verify admin permissions
+- Remove agent from database
+- Delete associated photo file if exists
+- Send deletion notification email
+- Return success confirmation
+Error Handling & Testing:
+
+Test all email deliveries
+Verify file upload security
+Test agent approval complete workflow
+Validate all database operations
+Test mobile responsiveness
+Handle edge cases (missing photos, failed uploads, etc.)
+
+Directory Structure:
+/uploads/
+  /agent-photos/
+    - agent-1-1703123456789.jpg
+    - agent-2-1703123456790.png
+    - etc.
+Form Validation:
+
+Phone number: Required, format validation (international format accepted)
+Photo: Optional, file size max 5MB, jpg/jpeg/png only
+Show preview of uploaded photo
+Clear error messages for validation failures
+
+Please implement all these fixes and features with proper error handling, security measures, and thorough testing. The agent approval system is critical and needs to work flawlessly, and the photo upload must be completely optional with proper fallback to initials."

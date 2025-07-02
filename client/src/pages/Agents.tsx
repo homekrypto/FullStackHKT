@@ -27,6 +27,7 @@ interface Agent {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
   company: string;
   city: string;
   country: string;
@@ -35,6 +36,7 @@ interface Agent {
   yearsExperience: number;
   languagesSpoken: string[];
   profileImage: string;
+  photoUrl: string;
   website: string;
   linkedIn: string;
   referralLink: string;
@@ -186,7 +188,7 @@ export default function Agents() {
                 <CardHeader className="text-center">
                   <div className="mx-auto mb-4">
                     <Avatar className="h-20 w-20">
-                      <AvatarImage src={agent.profileImage} alt={`${agent.firstName} ${agent.lastName}`} />
+                      <AvatarImage src={agent.photoUrl} alt={`${agent.firstName} ${agent.lastName}`} />
                       <AvatarFallback className="text-lg">
                         {agent.firstName[0]}{agent.lastName[0]}
                       </AvatarFallback>
@@ -206,6 +208,15 @@ export default function Agents() {
                     <div className="flex items-center gap-2 text-sm">
                       <Building className="h-4 w-4 text-gray-500" />
                       <span>{agent.company}</span>
+                    </div>
+                  )}
+                  
+                  {agent.phone && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="h-4 w-4 text-gray-500" />
+                      <a href={`tel:${agent.phone}`} className="hover:text-blue-600 dark:hover:text-blue-400">
+                        {agent.phone}
+                      </a>
                     </div>
                   )}
                   
