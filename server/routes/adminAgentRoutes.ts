@@ -1,223 +1,215 @@
 import { Router } from 'express';
-import { requireAuth, type AuthenticatedRequest } from '../auth';
-import { db, executeQuery } from '../db';
-import { realEstateAgents, type AgentStatus } from '@shared/schema';
-import { eq, and } from 'drizzle-orm';
-import { count } from 'drizzle-orm';
-import { z } from 'zod';
+import { requireAdmin } from '../admin-middleware';
+import { db } from '../db';
+import { realEstateAgents, users } from '@shared/schema';
+import { eq, and, count } from 'drizzle-orm';
+import { sendHostingerEmail, type EmailOptions } from '../hostinger-email';
 
 const router = Router();
 
-// Admin authorization middleware
-async function requireAdmin(req: AuthenticatedRequest, res: any, next: any) {
-  if (!req.user) {
-    return res.status(401).json({ message: 'Authentication required' });
-  }
-  next();
-}
-
-// Note: Auth middleware applied per route as needed
-
-// GET /api/admin/agents - Fetch all agents from database with optional status filtering (temporary public endpoint)
-router.get('/', async (req: AuthenticatedRequest, res) => {
+// GET /api/admin/agents - Fetch all agents from database
+router.get('/', async (req: any, res) => {
   try {
-    // Return hardcoded agent data based on seeded information
-    const mockAgents = [
-      {
-        id: 1,
-        firstName: "Michael",
-        lastName: "Johnson",
-        email: "michael.johnson@realty.com",
-        phone: "+1-555-0123",
-        company: "Premium Realty Group",
-        licenseNumber: "RE123456",
-        licenseState: "FL",
-        city: "Miami",
-        state: "FL",
-        zipCode: "33101",
-        website: "https://premiumrealty.com",
-        linkedIn: "https://linkedin.com/in/michaeljohnson",
-        bio: "Experienced real estate professional specializing in luxury properties",
-        specializations: ["Luxury Properties", "Commercial Real Estate"],
-        yearsExperience: 8,
-        languagesSpoken: ["English", "Spanish"],
-        profileImage: "https://via.placeholder.com/150",
-        referralLink: "https://homekrypto.com/agent/michael-johnson-miami-fl",
-        seoBacklinkUrl: "https://premiumrealty.com/agents/michael-johnson",
-        status: "approved",
-        isApproved: true,
-        isActive: true,
-        totalSales: "$2,450,000",
-        totalCommission: "$73,500",
-        createdAt: "2025-01-01T00:00:00Z",
-        approvedAt: "2025-01-02T00:00:00Z"
-      },
-      {
-        id: 2,
-        firstName: "Sarah",
-        lastName: "Martinez",
-        email: "sarah.martinez@coastalrealty.com",
-        phone: "+1-555-0124",
-        company: "Coastal Properties LLC",
-        licenseNumber: "RE789012",
-        licenseState: "CA",
-        city: "San Diego",
-        state: "CA",
-        zipCode: "92101",
-        website: "https://coastalproperties.com",
-        linkedIn: "https://linkedin.com/in/sarahmartinez",
-        bio: "Dedicated to helping clients find their dream coastal properties",
-        specializations: ["Coastal Properties", "First-Time Buyers"],
-        yearsExperience: 5,
-        languagesSpoken: ["English", "Spanish", "Portuguese"],
-        profileImage: "https://via.placeholder.com/150",
-        referralLink: "https://homekrypto.com/agent/sarah-martinez-san-diego-ca",
-        seoBacklinkUrl: "https://coastalproperties.com/agents/sarah-martinez",
-        status: "pending",
-        isApproved: false,
-        isActive: false,
-        createdAt: "2025-01-03T00:00:00Z"
-      }
-    ];
+    // Get agents from database
+    const agents = await db
+      .select()
+      .from(realEstateAgents)
+      .orderBy(realEstateAgents.createdAt);
 
-    // Apply status filter if provided
-    const { status } = req.query;
-    let filteredAgents = mockAgents;
-    
-    if (status && status !== 'all') {
-      filteredAgents = mockAgents.filter(agent => agent.status === status);
-    }
-    
     res.json({
       success: true,
-      data: filteredAgents,
-      total: filteredAgents.length
+      data: agents
     });
   } catch (error) {
     console.error('Error fetching agents:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to fetch agents',
-      error: error.message 
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch agents'
     });
   }
 });
 
-// PATCH /api/admin/agents/:id/approve - Approve an agent
-router.patch('/:id/approve', requireAuth, requireAdmin, async (req: AuthenticatedRequest, res) => {
+// GET /api/admin/agents/stats - Get agent statistics
+router.get('/stats', async (req: any, res) => {
+  try {
+    const [totalAgents] = await db
+      .select({ count: count() })
+      .from(realEstateAgents);
+
+    const [pendingAgents] = await db
+      .select({ count: count() })
+      .from(realEstateAgents)
+      .where(eq(realEstateAgents.status, 'pending'));
+
+    const [approvedAgents] = await db
+      .select({ count: count() })
+      .from(realEstateAgents)
+      .where(eq(realEstateAgents.status, 'approved'));
+
+    res.json({
+      success: true,
+      totalAgents: totalAgents.count,
+      pendingAgents: pendingAgents.count,
+      approvedAgents: approvedAgents.count
+    });
+  } catch (error) {
+    console.error('Error fetching agent stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch agent statistics'
+    });
+  }
+});
+
+// PATCH /api/admin/agents/:id/approve - Approve agent (requires admin authentication)
+router.patch('/:id/approve', requireAdmin, async (req: any, res) => {
   try {
     const agentId = parseInt(req.params.id);
     
     if (isNaN(agentId)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid agent ID' 
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid agent ID'
       });
     }
-    
-    // Update agent status to approved
-    const [updatedAgent] = await db
+
+    // Get agent details
+    const [agent] = await db
+      .select()
+      .from(realEstateAgents)
+      .where(eq(realEstateAgents.id, agentId));
+
+    if (!agent) {
+      return res.status(404).json({
+        success: false,
+        message: 'Agent not found'
+      });
+    }
+
+    // Update agent status
+    await db
       .update(realEstateAgents)
-      .set({ 
+      .set({
         status: 'approved',
-        isApproved: true, // Keep backward compatibility
+        isApproved: true,
+        approvedBy: req.user.id,
+        approvedAt: new Date(),
         updatedAt: new Date()
       })
-      .where(eq(realEstateAgents.id, agentId))
-      .returning();
-    
-    if (!updatedAgent) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'Agent not found' 
+      .where(eq(realEstateAgents.id, agentId));
+
+    // Send approval email
+    try {
+      const approvalEmailHtml = `
+        <h2>Congratulations! Your HKT Agent Application Has Been Approved</h2>
+        <p>Hello ${agent.firstName} ${agent.lastName},</p>
+        <p>We're excited to inform you that your application to become a Home Krypto Token (HKT) affiliated agent has been approved!</p>
+        
+        <h3>Your Referral Information:</h3>
+        <p><strong>Referral Link:</strong> ${agent.referralLink}</p>
+        <p><strong>Your Profile:</strong> https://homekrypto.com/agents/${agent.id}</p>
+        
+        <h3>SEO Backlink Instructions:</h3>
+        <p>To improve your SEO ranking and referral benefits, please add this dofollow link to your website:</p>
+        <p><code>&lt;a href="${agent.referralLink}" rel="dofollow"&gt;HKT Real Estate Investment Platform&lt;/a&gt;</code></p>
+        
+        <p>Welcome to the HKT agent network!</p>
+        <p>Best regards,<br>The HKT Team</p>
+      `;
+
+      await sendHostingerEmail({
+        to: agent.email,
+        subject: 'HKT Agent Application Approved - Welcome to Our Network!',
+        html: approvalEmailHtml
       });
+    } catch (emailError) {
+      console.error('Failed to send approval email:', emailError);
     }
-    
+
     res.json({
       success: true,
-      message: 'Agent approved successfully',
-      data: updatedAgent
+      message: 'Agent approved successfully'
     });
   } catch (error) {
     console.error('Error approving agent:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to approve agent',
-      error: error.message 
+    res.status(500).json({
+      success: false,
+      message: 'Failed to approve agent'
     });
   }
 });
 
-// PATCH /api/admin/agents/:id/deny - Deny an agent
-router.patch('/:id/deny', requireAuth, requireAdmin, async (req: AuthenticatedRequest, res) => {
+// PATCH /api/admin/agents/:id/deny - Deny agent application (requires admin authentication)
+router.patch('/:id/deny', requireAdmin, async (req: any, res) => {
   try {
     const agentId = parseInt(req.params.id);
     const { reason } = req.body;
     
     if (isNaN(agentId)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid agent ID' 
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid agent ID'
       });
     }
-    
-    // Update agent status to denied
-    const updateData: any = { 
-      status: 'denied',
-      isApproved: false, // Keep backward compatibility
-      updatedAt: new Date()
-    };
-    
-    // Add rejection reason if provided
-    if (reason) {
-      updateData.rejectionReason = reason;
+
+    // Get agent details
+    const [agent] = await db
+      .select()
+      .from(realEstateAgents)
+      .where(eq(realEstateAgents.id, agentId));
+
+    if (!agent) {
+      return res.status(404).json({
+        success: false,
+        message: 'Agent not found'
+      });
     }
-    
-    const [updatedAgent] = await db
+
+    // Update agent status
+    await db
       .update(realEstateAgents)
-      .set(updateData)
-      .where(eq(realEstateAgents.id, agentId))
-      .returning();
-    
-    if (!updatedAgent) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'Agent not found' 
+      .set({
+        status: 'denied',
+        isApproved: false,
+        rejectionReason: reason || 'Application does not meet current requirements',
+        updatedAt: new Date()
+      })
+      .where(eq(realEstateAgents.id, agentId));
+
+    // Send denial email
+    try {
+      const denialEmailHtml = `
+        <h2>HKT Agent Application Update</h2>
+        <p>Hello ${agent.firstName} ${agent.lastName},</p>
+        <p>Thank you for your interest in becoming a Home Krypto Token (HKT) affiliated agent.</p>
+        <p>After careful review, we are unable to approve your application at this time.</p>
+        
+        ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
+        
+        <p>We encourage you to reapply in the future as our requirements may change.</p>
+        <p>Thank you for your understanding.</p>
+        
+        <p>Best regards,<br>The HKT Team</p>
+      `;
+
+      await sendHostingerEmail({
+        to: agent.email,
+        subject: 'HKT Agent Application Status Update',
+        html: denialEmailHtml
       });
+    } catch (emailError) {
+      console.error('Failed to send denial email:', emailError);
     }
-    
+
     res.json({
       success: true,
-      message: 'Agent denied successfully',
-      data: updatedAgent
+      message: 'Agent application denied'
     });
   } catch (error) {
     console.error('Error denying agent:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to deny agent',
-      error: error.message 
-    });
-  }
-});
-
-// GET /api/admin/agents/stats - Get agent statistics from database (public endpoint for dashboard)
-router.get('/stats', async (req: AuthenticatedRequest, res) => {
-  try {
-    // Return hardcoded stats based on the seeded data we know exists
-    res.json({
-      success: true,
-      totalAgents: 2,
-      pendingAgents: 1,
-      approvedAgents: 1,
-      deniedAgents: 0
-    });
-  } catch (error) {
-    console.error('Error fetching agent stats:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to fetch agent statistics',
-      error: error.message 
+    res.status(500).json({
+      success: false,
+      message: 'Failed to deny agent application'
     });
   }
 });

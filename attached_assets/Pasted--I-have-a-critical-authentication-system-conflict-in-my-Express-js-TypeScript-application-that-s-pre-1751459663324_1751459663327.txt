@@ -1,0 +1,59 @@
+"I have a critical authentication system conflict in my Express.js TypeScript application that's preventing my website from working properly. I'm currently running two authentication systems simultaneously which is causing major issues.
+
+**CURRENT PROBLEM:**
+- Running both database-based auth (PostgreSQL + Drizzle ORM) AND in-memory auth (simple-auth.ts with Map objects)
+- Website only shows title with no content loading
+- Session inconsistencies and security vulnerabilities
+- Server restart causes all sessions to be lost
+
+**MY DATABASE SETUP:**
+- PostgreSQL 16.9 with Drizzle ORM
+- Complete schema with users, sessions, password_resets, email_verifications tables
+- JWT tokens + bcrypt password hashing
+- Admin system with roles (admin@homekrypto.com, user accounts)
+
+**WHAT I NEED YOU TO DO:**
+
+1. **AUDIT MY CURRENT AUTH FILES:**
+   - Identify all files using in-memory auth (simple-auth.ts, any Map objects)
+   - Show me exactly which authentication system each endpoint is using
+   - List all inconsistencies between the two systems
+
+2. **COMPLETE MIGRATION PLAN:**
+   - Step-by-step migration from in-memory to database-only auth
+   - Preserve existing user accounts and admin privileges
+   - Ensure zero data loss during migration
+
+3. **REMOVE IN-MEMORY AUTH:**
+   - Safely remove simple-auth.ts and all Map-based storage
+   - Update all endpoints to use database authentication only
+   - Remove any temporary or development auth code
+
+4. **FIX JWT + DATABASE INTEGRATION:**
+   - Ensure JWT tokens are validated against database sessions table
+   - Implement proper session creation/deletion in PostgreSQL
+   - Fix token refresh and expiration handling
+
+5. **RESOLVE SESSION PERSISTENCE:**
+   - Store all sessions in database (not memory)
+   - Ensure sessions survive server restarts
+   - Implement proper session cleanup and expiration
+
+6. **SECURITY AUDIT:**
+   - Verify all admin endpoints use proper database role checking
+   - Ensure password hashing works correctly with database
+   - Test login/logout functionality completely
+
+7. **TESTING PROTOCOL:**
+   - Test all auth endpoints (/api/auth/login, /register, etc.)
+   - Verify admin access works (admin@homekrypto.com)
+   - Confirm frontend can authenticate and load content
+
+**EXPECTED OUTCOME:**
+- Single, consistent database-based authentication system
+- Website loads properly with authenticated content
+- Admin panel works correctly
+- Sessions persist through server restarts
+- All security vulnerabilities resolved
+
+Please provide the complete implementation with all code changes, file modifications, and testing steps to fix this authentication conflict permanently."

@@ -48,32 +48,17 @@ app.use((req, res, next) => {
   next();
 });
 
-// Add temporary routes for admin panel testing
-import tempAdminRoutes from './temp-admin-routes';
-import simpleAuthRoutes from './simple-auth';
+// Database-based authentication system
+import databaseAuthRoutes from './database-auth';
 import adminAgentRoutes from './routes/adminAgentRoutes';
+import { requireAdmin } from './admin-middleware';
 
-// Use temporary routes to bypass database connection issues
-app.use('/api/temp-admin', tempAdminRoutes);
-app.use('/api/auth', simpleAuthRoutes);
+// Use database authentication (replaces all in-memory auth systems)
+app.use('/api/auth', databaseAuthRoutes);
 app.use('/api/admin/agents', adminAgentRoutes);
 
-// Import temporary user routes
-import tempBookingRoutes from './temp-booking-routes.js';
-import tempUserRoutes from './temp-user-routes.js';
-import tempSimpleBookingRoutes from './temp-simple-booking-routes.js';
-
-// Import temporary blog routes
-import tempBlogRoutes from './temp-blog-routes.js';
-import { testEmailDelivery } from './test-email';
-
-// Register temporary user functionality routes
-app.use('/api/bookings', tempBookingRoutes);
-app.use('/api/user', tempUserRoutes);
-app.use('/api/simple-booking', tempSimpleBookingRoutes);
-app.use('/api/swap', tempUserRoutes); // Swap routes are in temp-user-routes
-app.use('/api/cross-chain-wallet', tempUserRoutes); // Wallet routes are in temp-user-routes
-app.use('/api/blog', tempBlogRoutes);
+// Database-based routes will be added here as needed
+// All authentication is now handled by database-auth.ts
 
 // Agent registration route (must be before Vite middleware)
 app.post('/api/agents/register', async (req, res) => {
