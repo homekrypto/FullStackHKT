@@ -178,6 +178,7 @@ app.get('/api/agents', async (req, res) => {
         firstName: realEstateAgents.firstName,
         lastName: realEstateAgents.lastName,
         email: realEstateAgents.email,
+        phone: realEstateAgents.phone,
         company: realEstateAgents.company,
         city: realEstateAgents.city,
         state: realEstateAgents.state,
@@ -186,7 +187,7 @@ app.get('/api/agents', async (req, res) => {
         specializations: realEstateAgents.specializations,
         yearsExperience: realEstateAgents.yearsExperience,
         languagesSpoken: realEstateAgents.languagesSpoken,
-        profileImage: realEstateAgents.profileImage,
+        photoUrl: realEstateAgents.photoUrl,
         website: realEstateAgents.website,
         linkedIn: realEstateAgents.linkedIn,
         referralLink: realEstateAgents.referralLink
@@ -317,21 +318,50 @@ app.get('/api/agents/search', async (req, res) => {
   }
 });
 
+// Agent page API endpoint - Use dedicated prefix to avoid route conflicts
+app.get('/api/agent-page/:country/:slug', async (req, res) => {
+  try {
+    const { country, slug } = req.params;
+    const fullSlug = `${country}/${slug}`;
+    console.log(`Agent page API called with country: ${country}, slug: ${slug}, fullSlug: ${fullSlug}`);
+    
+    // Get agent page by country-based slug with agent details
+    const [agentPage] = await db
+      .select()
+      .from(agentPages)
+      .leftJoin(realEstateAgents, eq(agentPages.agentId, realEstateAgents.id))
+      .where(and(
+        eq(agentPages.slug, fullSlug),
+        eq(agentPages.isActive, true),
+        eq(realEstateAgents.status, 'approved')
+      ));
 
+    if (!agentPage) {
+      return res.status(404).json({
+        success: false,
+        message: 'Agent page not found'
+      });
+    }
 
-// Agent pages endpoint - MUST come AFTER all specific routes
-app.get('/api/agents/:slug', async (req, res) => {
+    res.json({
+      success: true,
+      ...agentPage.agent_pages,
+      agent: agentPage.real_estate_agents
+    });
+  } catch (error) {
+    console.error('Error fetching agent page:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch agent page'
+    });
+  }
+});
+
+// Agent page API endpoint - Handle simple slug for backward compatibility
+app.get('/api/agent-page/:slug', async (req, res) => {
   try {
     const slug = req.params.slug;
-    
-    // Handle country-based URLs like "united-states/john-smith"
-    const slugParts = slug.split('/');
-    let searchSlug = slug;
-    
-    // If it's a country/agent structure, use the full path
-    if (slugParts.length === 2) {
-      searchSlug = slug; // Keep full country/agent path
-    }
+    console.log(`Agent page API called with simple slug: ${slug}`);
     
     // Get agent page by slug with agent details
     const [agentPage] = await db
@@ -339,7 +369,7 @@ app.get('/api/agents/:slug', async (req, res) => {
       .from(agentPages)
       .leftJoin(realEstateAgents, eq(agentPages.agentId, realEstateAgents.id))
       .where(and(
-        eq(agentPages.slug, searchSlug),
+        eq(agentPages.slug, slug),
         eq(agentPages.isActive, true),
         eq(realEstateAgents.status, 'approved')
       ));

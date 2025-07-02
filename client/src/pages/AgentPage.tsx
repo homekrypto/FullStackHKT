@@ -62,7 +62,7 @@ interface AgentPage {
 }
 
 async function fetchAgentPage(slug: string): Promise<AgentPage> {
-  const response = await fetch(`/api/agents/${slug}`);
+  const response = await fetch(`/api/agent-page/${slug}`);
   if (!response.ok) {
     throw new Error('Agent page not found');
   }
@@ -76,7 +76,7 @@ export default function AgentPage() {
   const fullSlug = country ? `${country}/${slug}` : slug;
   
   const { data: agentPage, isLoading, error } = useQuery({
-    queryKey: [`/api/agents/${fullSlug}`],
+    queryKey: [`/api/agent-page/${fullSlug}`],
     queryFn: () => fetchAgentPage(fullSlug),
     enabled: !!fullSlug,
   });
