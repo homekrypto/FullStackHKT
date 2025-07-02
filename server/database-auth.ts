@@ -126,13 +126,13 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Verify password (handle null password_hash)
-    if (!user.password_hash) {
+    // Verify password (handle null passwordHash)
+    if (!user.passwordHash) {
       console.log(`Login failed - no password hash for user: ${normalizedEmail}`);
       return res.status(401).json({ message: 'Invalid credentials' });
     }
     
-    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
     if (!isValidPassword) {
       console.log(`Login failed - invalid password: ${normalizedEmail}`);
       return res.status(401).json({ message: 'Invalid credentials' });

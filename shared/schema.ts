@@ -243,6 +243,20 @@ export const properties = pgTable("properties", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Agent pages table for SEO-optimized agent profiles
+export const agentPages = pgTable("agent_pages", {
+  id: serial("id").primaryKey(),
+  agentId: integer("agent_id").references(() => realEstateAgents.id).notNull(),
+  slug: text("slug").notNull().unique(),
+  seoTitle: text("seo_title").notNull(),
+  seoDescription: text("seo_description").notNull(),
+  seoKeywords: text("seo_keywords").notNull(),
+  pageContent: text("page_content").notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const insertQuarterlyDataSchema = createInsertSchema(quarterlyData).pick({
   investmentId: true,
   year: true,

@@ -1,0 +1,70 @@
+"I need to fix my agent approval system and add several new features. Currently getting 500 Internal Server Error when trying to approve/deny agents in my admin panel.
+
+**CURRENT ISSUES TO FIX:**
+1. Agent approval/denial endpoints returning 500 error: {"message":"Internal server error"}
+2. Need to debug the PATCH /api/admin/agents/:id/approve and /api/admin/agents/:id/deny endpoints
+3. Check database connection and Drizzle ORM queries for agent status updates
+
+**NEW FEATURES TO IMPLEMENT:**
+
+**1. AGENT PAGE CREATION SYSTEM:**
+When an agent is approved, automatically:
+- Create a unique SEO-optimized page for each agent (URL: /agents/[agent-slug])
+- Generate SEO-friendly meta tags including:
+  * Title: "[Agent Name] - Crypto & Real Estate Investment Expert | HomeKrypto"
+  * Description: "Invest in real estate with cryptocurrency through [Agent Name]. Professional crypto real estate investment services with HomeKrypto platform."
+  * Keywords: "crypto real estate, cryptocurrency property investment, [Agent Name], HomeKrypto agent"
+  * Open Graph tags for social media sharing
+- Page should include agent profile, investment services, and crypto real estate focus
+
+**2. EMAIL NOTIFICATION SYSTEM:**
+When agent page is created, send confirmation email containing:
+- Congratulations message on approval
+- Direct link to their new agent page
+- Reminder to link back to homekrypto.com from their marketing materials
+- HTML instructions for embedding HomeKrypto referral links
+- Professional email template with HomeKrypto branding
+
+**3. ADMIN PANEL ENHANCEMENTS:**
+Add "Edit Agent Details" button in admin panel that allows:
+- Modify agent profile information
+- Update contact details and credentials
+- Change agent status (active/inactive)
+- Edit agent page content and SEO settings
+- Preview agent page before publishing
+
+**TECHNICAL REQUIREMENTS:**
+
+**Database Updates Needed:**
+- Add agent_pages table with fields: agent_id, slug, seo_title, seo_description, page_content, created_at
+- Update real_estate_agents table with approval_date, page_url, is_active fields
+
+**API Endpoints to Create/Fix:**
+- Fix: PATCH /api/admin/agents/:id/approve
+- Fix: PATCH /api/admin/agents/:id/deny  
+- Add: GET /api/admin/agents/:id (get single agent details)
+- Add: PUT /api/admin/agents/:id (update agent details)
+- Add: GET /agents/:slug (public agent page)
+
+**Email Integration:**
+- Use existing Hostinger SMTP setup (support@homekrypto.com)
+- Create professional HTML email template
+- Include agent page link and marketing instructions
+
+**Frontend Components:**
+- Agent page template with SEO optimization
+- Admin edit agent modal/form
+- Email preview functionality in admin panel
+
+**SEO IMPLEMENTATION:**
+- Dynamic meta tag generation for each agent page
+- URL slug generation from agent name
+- Structured data (JSON-LD) for better search indexing
+- Sitemap.xml update to include agent pages
+
+**ERROR HANDLING:**
+- Proper error logging for 500 errors
+- Database transaction handling for agent approval process
+- Email delivery confirmation and retry logic
+
+Please implement this complete system with proper error handling, testing, and provide the exact code changes needed to make everything work seamlessly."

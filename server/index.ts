@@ -52,10 +52,49 @@ app.use((req, res, next) => {
 import databaseAuthRoutes from './database-auth';
 import adminAgentRoutes from './routes/adminAgentRoutes';
 import { requireAdmin } from './admin-middleware';
+import { db } from './db-direct';
+import { agentPages, realEstateAgents } from '@shared/schema';
+import { eq, and } from 'drizzle-orm';
 
 // Use database authentication (replaces all in-memory auth systems)
 app.use('/api/auth', databaseAuthRoutes);
 app.use('/api/admin/agents', adminAgentRoutes);
+
+// Agent pages endpoint
+app.get('/api/agents/:slug', async (req, res) => {
+  try {
+    const slug = req.params.slug;
+    
+    // Get agent page by slug with agent details
+    const [agentPage] = await db
+      .select()
+      .from(agentPages)
+      .leftJoin(realEstateAgents, eq(agentPages.agentId, realEstateAgents.id))
+      .where(and(
+        eq(agentPages.slug, slug),
+        eq(agentPages.isActive, true),
+        eq(realEstateAgents.status, 'approved')
+      ));
+
+    if (!agentPage) {
+      return res.status(404).json({
+        success: false,
+        message: 'Agent page not found'
+      });
+    }
+
+    res.json({
+      ...agentPage.agent_pages,
+      agent: agentPage.real_estate_agents
+    });
+  } catch (error) {
+    console.error('Error fetching agent page:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch agent page'
+    });
+  }
+});
 
 // Database-based routes will be added here as needed
 // All authentication is now handled by database-auth.ts
