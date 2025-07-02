@@ -2,7 +2,7 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
-import { db } from './db';
+import { db } from './db-direct';
 import { users, sessions, passwordResets, emailVerifications } from '@shared/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { sendHostingerEmail, type EmailOptions } from './hostinger-email';
@@ -126,8 +126,13 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+    // Verify password (handle null password_hash)
+    if (!user.password_hash) {
+      console.log(`Login failed - no password hash for user: ${normalizedEmail}`);
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
       console.log(`Login failed - invalid password: ${normalizedEmail}`);
       return res.status(401).json({ message: 'Invalid credentials' });

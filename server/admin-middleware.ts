@@ -1,5 +1,5 @@
 import { authenticateUser } from './database-auth';
-import { db } from './db';
+import { db } from './db-direct';
 import { users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
