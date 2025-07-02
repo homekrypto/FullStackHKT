@@ -19,7 +19,7 @@ import {
   Shield,
   ArrowRight
 } from "lucide-react";
-import { Helmet } from "react-helmet-async";
+// import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/navigation";
 import Footer from "@/components/footer";
 
@@ -138,64 +138,7 @@ export default function AgentPage() {
 
   return (
     <>
-      <Helmet>
-        <title>{agentPage.seoTitle}</title>
-        <meta name="description" content={agentPage.seoDescription} />
-        <meta name="keywords" content={agentPage.seoKeywords} />
-        
-        {/* Open Graph tags */}
-        <meta property="og:title" content={agentPage.seoTitle} />
-        <meta property="og:description" content={agentPage.seoDescription} />
-        <meta property="og:type" content="profile" />
-        <meta property="og:url" content={`https://homekrypto.com/agents/${slug}`} />
-        <meta property="og:image" content={agent.profileImage || "https://homekrypto.com/og-agent-default.jpg"} />
-        
-        {/* Twitter Card tags */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={agentPage.seoTitle} />
-        <meta name="twitter:description" content={agentPage.seoDescription} />
-        <meta name="twitter:image" content={agent.profileImage || "https://homekrypto.com/og-agent-default.jpg"} />
-        
-        {/* Structured Data */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "RealEstateAgent",
-            "name": `${agent.firstName} ${agent.lastName}`,
-            "givenName": agent.firstName,
-            "familyName": agent.lastName,
-            "email": agent.email,
-            "telephone": agent.phone,
-            "url": `https://homekrypto.com/agents/${slug}`,
-            "image": agent.profileImage || "https://homekrypto.com/og-agent-default.jpg",
-            "jobTitle": "Crypto & Real Estate Investment Expert",
-            "worksFor": {
-              "@type": "Organization",
-              "name": agent.company,
-              "url": agent.website
-            },
-            "address": {
-              "@type": "PostalAddress",
-              "addressLocality": agent.city,
-              "addressRegion": agent.state,
-              "addressCountry": agent.country
-            },
-            "sameAs": [
-              agent.website,
-              agent.linkedIn
-            ].filter(Boolean),
-            "description": agent.bio,
-            "hasCredential": {
-              "@type": "EducationalOccupationalCredential",
-              "credentialCategory": "Real Estate License",
-              "recognizedBy": {
-                "@type": "State",
-                "name": agent.licenseState
-              }
-            }
-          })}
-        </script>
-      </Helmet>
+      {/* SEO optimization will be re-implemented after fixing Helmet provider */}
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-blue-950">
         <Navigation />
