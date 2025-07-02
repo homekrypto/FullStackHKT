@@ -47,6 +47,7 @@ import JoinWaitlist from "@/pages/join-waitlist";
 import AgentRegistration from "@/pages/AgentRegistration";
 import Agents from "@/pages/Agents";
 import AdminAgentManagement from "@/pages/AdminAgentManagement";
+import AdminUserManagement from "@/pages/AdminUserManagement";
 import DownloadPage from "@/pages/download";
 import SimpleBookingPage from "@/pages/SimpleBookingPage";
 import AgentPage from "@/pages/AgentPage";
@@ -107,6 +108,7 @@ function Router() {
       <Route path="/profile" component={Profile} />
       <Route path="/admin" component={AdminPanel} />
       <Route path="/admin/agents" component={AdminAgentManagement} />
+      <Route path="/admin/users" component={AdminUserManagement} />
       <Route path="/test-admin" component={TestAdmin} />
       <Route path="/download" component={DownloadPage} />
       <Route component={NotFound} />

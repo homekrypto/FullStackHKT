@@ -146,6 +146,26 @@ export default function AdminPanel() {
             <p className="text-gray-600 dark:text-gray-400">
               Manage properties, pricing, and platform settings
             </p>
+            
+            {/* Quick Navigation */}
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button
+                variant="outline"
+                onClick={() => window.location.href = '/admin/agents'}
+                className="flex items-center gap-2"
+              >
+                <Users className="h-4 w-4" />
+                Agent Management
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => window.location.href = '/admin/users'}
+                className="flex items-center gap-2"
+              >
+                <Settings className="h-4 w-4" />
+                User Management
+              </Button>
+            </div>
           </div>
 
           <Tabs defaultValue="properties" className="space-y-6">

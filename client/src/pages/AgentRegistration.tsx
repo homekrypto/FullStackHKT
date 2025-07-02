@@ -62,6 +62,7 @@ export default function AgentRegistration() {
   });
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoDimensions, setPhotoDimensions] = useState<{width: number, height: number} | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const registerMutation = useMutation({
@@ -137,10 +138,27 @@ export default function AgentRegistration() {
 
       setSelectedPhoto(file);
       
-      // Create preview
+      // Create preview and check dimensions
       const reader = new FileReader();
       reader.onload = (e) => {
-        setPhotoPreview(e.target?.result as string);
+        const imageUrl = e.target?.result as string;
+        setPhotoPreview(imageUrl);
+        
+        // Check image dimensions
+        const img = new Image();
+        img.onload = () => {
+          const dimensions = { width: img.width, height: img.height };
+          setPhotoDimensions(dimensions);
+          
+          // Show warning if not 200x200
+          if (img.width !== 200 || img.height !== 200) {
+            toast({
+              title: 'Image Size Notice',
+              description: `Image is ${img.width}x${img.height} pixels. For best results, use 200x200 pixels.`,
+            });
+          }
+        };
+        img.src = imageUrl;
       };
       reader.readAsDataURL(file);
     }
@@ -354,7 +372,7 @@ export default function AgentRegistration() {
 
               {/* Photo Upload Section */}
               <div className="md:col-span-2">
-                <Label htmlFor="photo">Profile Photo <span className="text-gray-500">(optional)</span></Label>
+                <Label htmlFor="photo">Profile Photo (Optional) - Preferred size: 200x200 pixels</Label>
                 <div className="mt-2 space-y-3">
                   <div className="flex items-center gap-4">
                     {photoPreview ? (
@@ -364,11 +382,17 @@ export default function AgentRegistration() {
                           alt="Preview" 
                           className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
                         />
+                        {photoDimensions && (
+                          <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded">
+                            {photoDimensions.width}x{photoDimensions.height}
+                          </div>
+                        )}
                         <button
                           type="button"
                           onClick={() => {
                             setSelectedPhoto(null);
                             setPhotoPreview(null);
+                            setPhotoDimensions(null);
                           }}
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
                         >
@@ -389,7 +413,7 @@ export default function AgentRegistration() {
                         className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        JPG, JPEG, or PNG. Max 5MB. This helps clients recognize you.
+                        Maximum file size: 5MB. Formats: JPG, PNG. Preferred size: 200x200 pixels.
                       </p>
                     </div>
                   </div>

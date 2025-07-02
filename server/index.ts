@@ -54,6 +54,7 @@ app.use((req, res, next) => {
 // Database-based authentication system
 import databaseAuthRoutes from './database-auth';
 import adminAgentRoutes from './routes/adminAgentRoutes';
+import adminUserRoutes from './routes/adminUserRoutes';
 import { requireAdmin } from './admin-middleware';
 import { db } from './db-direct';
 import { agentPages, realEstateAgents } from '@shared/schema';
@@ -62,6 +63,7 @@ import { eq, and } from 'drizzle-orm';
 // Use database authentication (replaces all in-memory auth systems)
 app.use('/api/auth', databaseAuthRoutes);
 app.use('/api/admin/agents', adminAgentRoutes);
+app.use('/api/admin/users', requireAdmin, adminUserRoutes);
 
 // GET /api/agents/countries - Get list of countries with agents (MUST come before /api/agents/:slug)
 app.get('/api/agents/countries', async (req, res) => {
