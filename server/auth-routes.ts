@@ -311,6 +311,7 @@ router.post('/forgot-password', generalLimiter, async (req, res) => {
 // Reset password
 router.post('/reset-password', generalLimiter, async (req, res) => {
   try {
+    console.log('Password reset request received');
     const { token, password } = resetPasswordSchema.parse(req.body);
 
     const userId = await validatePasswordResetToken(token);
@@ -336,7 +337,9 @@ router.post('/reset-password', generalLimiter, async (req, res) => {
       await deleteAllUserSessions(userId);
     });
 
-    // Send security confirmation email
+    console.log('Password reset successful, preparing HTML response');
+
+    // Send security confirmation email (async, don't wait for it)
     const timestamp = new Date().toLocaleString('en-US', {
       timeZone: 'UTC',
       year: 'numeric',
@@ -350,16 +353,20 @@ router.post('/reset-password', generalLimiter, async (req, res) => {
     const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
     const userAgent = req.get('User-Agent');
 
-    await sendPasswordChangeConfirmation({
+    // Send email in background, don't wait for it to complete
+    sendPasswordChangeConfirmation({
       userEmail: user.email,
       userName: user.firstName || 'User',
       timestamp: timestamp,
       ipAddress: ipAddress,
       userAgent: getUserAgent(userAgent),
       location: getLocationFromIP(ipAddress)
+    }).catch(error => {
+      console.error('Background email send failed:', error);
     });
 
     // Return beautiful success page instead of JSON
+    console.log('Generating HTML success page');
     const successPageHtml = `
 <!DOCTYPE html>
 <html lang="en">
@@ -534,8 +541,11 @@ router.post('/reset-password', generalLimiter, async (req, res) => {
 </body>
 </html>`;
     
+    console.log('Setting HTML content type and sending response');
     res.setHeader('Content-Type', 'text/html');
+    console.log('About to send HTML response');
     res.send(successPageHtml);
+    console.log('HTML response sent successfully');
   } catch (error) {
     console.error('Reset password error:', error);
     if (error instanceof z.ZodError) {
