@@ -17,27 +17,69 @@ const InteractiveHomepage = () => {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Hero Section Animation - Text scaling and movement
-      gsap.fromTo(".hero-main-text", 
+      // Hero Section - Progressive Text Scrolling Animation
+      gsap.fromTo(".hero-text", 
         { 
-          scale: 0.8, 
-          opacity: 0.7,
-          y: 50
+          yPercent: -50,
+          opacity: 0,
+          scale: 2
         },
         {
-          scale: 1,
+          yPercent: 0,
           opacity: 1,
-          y: 0,
-          duration: 2,
+          scale: 1,
+          duration: 1.5,
           ease: "power3.out",
           scrollTrigger: {
             trigger: ".hero-section",
-            start: "top center",
-            end: "bottom center",
-            scrub: 1
+            start: "top top",
+            end: "bottom top",
+            scrub: true,
+            pin: true
           }
         }
       );
+
+      // Text shrinking and fading as user scrolls
+      gsap.to(".hero-text", {
+        scale: 0.8,
+        opacity: 0.7,
+        scrollTrigger: {
+          trigger: ".hero-section",
+          start: "top bottom",
+          end: "top center",
+          scrub: true
+        },
+        duration: 1.5,
+        ease: "power3.out"
+      });
+
+      // Progressive text reveal with staggered animation
+      gsap.to(".hero-text .text-line", {
+        opacity: 1,
+        y: 0,
+        duration: 1.5,
+        ease: "power3.out",
+        stagger: 0.3,
+        scrollTrigger: {
+          trigger: ".hero-section",
+          start: "top top",
+          end: "bottom center",
+          scrub: true
+        }
+      });
+
+      // Background parallax effect
+      gsap.to(".hero-background", {
+        yPercent: 30,
+        ease: "none",
+        scrollTrigger: {
+          trigger: ".hero-section",
+          start: "top bottom",
+          end: "bottom top",
+          scrub: true
+        }
+      });
 
       // Section 1 - HKT Token Introduction (slide from left)
       gsap.fromTo(".section-1-content", 
@@ -124,18 +166,6 @@ const InteractiveHomepage = () => {
         }
       );
 
-      // Background parallax effect
-      gsap.to(".parallax-bg", {
-        yPercent: -50,
-        ease: "none",
-        scrollTrigger: {
-          trigger: ".parallax-bg",
-          start: "top bottom",
-          end: "bottom top",
-          scrub: true
-        }
-      });
-
       // Floating animation for elements
       gsap.to(".floating-element", {
         y: -20,
@@ -152,30 +182,63 @@ const InteractiveHomepage = () => {
 
   return (
     <div ref={containerRef} className="relative overflow-hidden">
-      {/* Parallax Background */}
-      <div className="parallax-bg fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 -z-10" />
+      {/* Fixed Background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 -z-10" />
       
-      {/* Hero Section */}
-      <section className="hero-section min-h-screen flex items-center justify-center relative">
-        <div className="container mx-auto px-4 text-center">
-          <div ref={heroTextRef} className="hero-main-text space-y-8">
-            <h1 className="text-6xl md:text-8xl lg:text-9xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent leading-tight">
-              HKT
-            </h1>
-            <h2 className="text-2xl md:text-4xl lg:text-5xl font-light text-white/90 max-w-4xl mx-auto">
-              Investing in Real Estate Via Crypto
-            </h2>
-            <p className="text-xl md:text-2xl text-blue-200 font-light max-w-3xl mx-auto">
-              The Future of Property Investment
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-12">
-              <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 text-lg floating-element">
-                Start Investing
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-              <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10 px-8 py-4 text-lg">
-                Watch Demo
-              </Button>
+      {/* Hero Section with Dynamic Text Scrolling */}
+      <section className="hero-section min-h-screen flex items-center justify-center relative overflow-hidden">
+        {/* Parallax Background */}
+        <div className="hero-background absolute inset-0 bg-gradient-to-br from-slate-800 via-blue-900 to-purple-900">
+          <div className="absolute inset-0 opacity-20" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            backgroundSize: '60px 60px'
+          }}></div>
+        </div>
+        
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <div className="hero-text space-y-8">
+            {/* Dynamic Text Lines */}
+            <div className="text-3xl md:text-5xl lg:text-6xl font-bold text-white leading-tight space-y-4">
+              <div className="text-line opacity-0 transform translate-y-12">
+                <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  We do investing in real estate
+                </span>
+              </div>
+              <div className="text-line opacity-0 transform translate-y-12">
+                <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  much better than others
+                </span>
+              </div>
+              <div className="text-line opacity-0 transform translate-y-12">
+                <span className="bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
+                  Our innovative plan of shares
+                </span>
+              </div>
+              <div className="text-line opacity-0 transform translate-y-12">
+                <span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+                  will revolutionize the market
+                </span>
+              </div>
+            </div>
+            
+            {/* Supporting Text */}
+            <div className="text-line opacity-0 transform translate-y-12 mt-8">
+              <p className="text-xl md:text-2xl text-white/80 font-light max-w-4xl mx-auto">
+                Experience seamless, transparent, and secure real estate investments with HKT tokens
+              </p>
+            </div>
+            
+            {/* Call to Action Buttons */}
+            <div className="text-line opacity-0 transform translate-y-12 mt-12">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 text-lg floating-element">
+                  Start Investing
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+                <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10 px-8 py-4 text-lg">
+                  Watch Demo
+                </Button>
+              </div>
             </div>
           </div>
         </div>
