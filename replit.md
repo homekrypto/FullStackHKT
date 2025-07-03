@@ -1,12 +1,8 @@
-# Home Krypto Platform - Dual Real Estate System
+# Home Krypto Token (HKT) - Real Estate Investment Platform
 
 ## Overview
 
-This is a comprehensive full-stack real estate platform that combines two major systems:
-
-1. **HKT (Home Krypto Token) Investment Platform** - A blockchain-based real estate investment system allowing users to invest in premium real estate through cryptocurrency tokens, providing fractional ownership of high-value property assets starting from $100.
-
-2. **Real Estate Agent Management System** - A professional networking and directory platform for real estate agents featuring registration, approval workflows, country-based organization, and comprehensive agent profiles with SEO optimization.
+This is a full-stack web application for HKT (Home Krypto Token), a blockchain-based real estate investment platform. The application allows users to invest in premium real estate through cryptocurrency tokens, providing fractional ownership of high-value property assets. Users can start investing with monthly contributions and track their portfolio growth through a comprehensive dashboard.
 
 ## System Architecture
 
@@ -211,7 +207,6 @@ This is a comprehensive full-stack real estate platform that combines two major 
 - July 1, 2025. AGENT APPROVAL BACKEND API COMPLETE - created server/routes/adminAgentRoutes.ts with three admin-protected endpoints: GET /api/admin/agents (list agents with optional status filtering and pagination), PATCH /api/admin/agents/:id/approve (approve agent and send professional approval email with referral link and SEO instructions), PATCH /api/admin/agents/:id/deny (deny agent application with optional reason and send professional denial email). Integrated with existing Hostinger email service for automated notifications. Routes tested and operational at /api/admin/agents endpoint with proper admin authentication middleware protection.
 - July 2, 2025. POSTGRESQL DATABASE INTEGRATED - successfully migrated from offline mode to persistent PostgreSQL database using Replit's database service. Applied database schema with npm run db:push, all tables created successfully. Application now connects to real PostgreSQL database with DATABASE_URL environment variable. All user data, investments, properties, and agent information now persists permanently across server restarts.
 - July 2, 2025. COMPREHENSIVE COUNTRY-BASED AGENT DIRECTORY SYSTEM IMPLEMENTED - fixed agent approval system issues, created country-based agent organization with URLs like /agents/united-states/john-smith, implemented functional search system with real-time filtering by name/city/company, added country dropdown filter, fixed 404 errors on agent pages by implementing proper slug generation without spaces, created comprehensive API endpoints (GET /api/agents, /api/agents/countries, /api/agents/search), enhanced SEO with country-specific meta tags and structured data, updated agent approval process to generate country-based slugs, and completed full CRUD functionality for agent management. System now shows actual number of verified agents (3) and countries covered (1), with fully operational search, filtering, and country-based navigation.
-- July 3, 2025. RESTORED SCREENSHOT CONTENT WITH CRYPTO-FOCUSED THEME - restored all detailed content from user's 9 screenshots including Property Share Calculator, "Real Estate Investment Reimagined" comparison, "Introducing HKT Token" and "One Token. Infinite Possibilities" sections. Simplified color scheme to crypto-focused black background with orange/yellow gradients only, reducing visual complexity while maintaining all functionality. Added navigation links to demonstrate dual-platform nature - HKT investment homepage with direct access to agent management system at /agents. Platform now clearly shows both systems working together with 3 registered agents and comprehensive HKT investment interface.
 
 ## User Preferences
 
