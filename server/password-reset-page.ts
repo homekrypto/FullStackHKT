@@ -199,88 +199,225 @@ export function generatePasswordResetSuccessPage(): string {
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #333;
+            color: white;
+            overflow: hidden;
         }
         
-        .container {
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 400px;
-            margin: 1rem;
+        .success-container {
             text-align: center;
+            animation: fadeInUp 0.8s ease-out;
+            max-width: 600px;
+            padding: 2rem;
         }
         
-        .logo {
+        .checkmark-container {
             margin-bottom: 2rem;
+            position: relative;
         }
         
-        .logo h1 {
-            color: #667eea;
-            font-size: 1.8rem;
-            font-weight: 700;
-        }
-        
-        .success-icon {
-            width: 64px;
-            height: 64px;
-            background: #10b981;
+        .checkmark {
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: 3px solid white;
+            margin: 0 auto 2rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 1.5rem;
-            color: white;
-            font-size: 2rem;
+            animation: scaleIn 0.6s ease-out 0.2s both;
         }
         
-        .message {
-            margin-bottom: 2rem;
-            color: #374151;
+        .checkmark svg {
+            width: 60px;
+            height: 60px;
+            stroke: white;
+            stroke-width: 3;
+            fill: none;
+            animation: drawCheck 0.8s ease-out 0.5s both;
+        }
+        
+        .success-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            animation: fadeInUp 0.6s ease-out 0.3s both;
+        }
+        
+        .success-message {
+            font-size: 1.25rem;
+            margin-bottom: 3rem;
+            opacity: 0.9;
+            animation: fadeInUp 0.6s ease-out 0.4s both;
             line-height: 1.6;
         }
         
-        .btn {
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            text-decoration: none;
-            cursor: pointer;
-            transition: transform 0.2s;
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.6s ease-out 0.5s both;
         }
         
-        .btn:hover {
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            min-width: 160px;
+        }
+        
+        .btn-primary {
+            background: white;
+            color: #059669;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-primary:hover {
             transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .security-note {
+            margin-top: 3rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: fadeInUp 0.6s ease-out 0.6s both;
+        }
+        
+        .security-note h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .security-note p {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes drawCheck {
+            from {
+                stroke-dasharray: 0 100;
+            }
+            to {
+                stroke-dasharray: 100 0;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .success-title {
+                font-size: 2.5rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="logo">
-            <h1>HKT</h1>
+    <div class="success-container">
+        <div class="checkmark-container">
+            <div class="checkmark">
+                <svg viewBox="0 0 24 24">
+                    <path d="M20 6L9 17l-5-5"/>
+                </svg>
+            </div>
         </div>
         
-        <div class="success-icon">✓</div>
+        <h1 class="success-title">Success!</h1>
         
-        <div class="message">
-            <h2>Password Reset Successful!</h2>
-            <p>Your password has been updated successfully. You can now log in with your new password.</p>
+        <p class="success-message">
+            Your password has been updated successfully.<br>
+            You can now log in with your new password.
+        </p>
+        
+        <div class="action-buttons">
+            <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
+            <a href="/login" class="btn btn-secondary">Log In Now</a>
         </div>
         
-        <a href="/" class="btn">Go to Login</a>
+        <div class="security-note">
+            <h3>
+                🔒 Security Confirmation
+            </h3>
+            <p>
+                We've sent a confirmation email to your account. If you didn't request this password change, 
+                please contact our support team immediately with the subject "Password Breach - Urgent".
+            </p>
+        </div>
     </div>
+    
+    <script>
+        // Auto-redirect to login after 10 seconds if user doesn't click
+        setTimeout(() => {
+            const loginBtn = document.querySelector('a[href="/login"]');
+            if (loginBtn) {
+                loginBtn.style.background = 'rgba(255, 255, 255, 0.4)';
+                loginBtn.textContent = 'Redirecting to Login...';
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 2000);
+            }
+        }, 8000);
+    </script>
 </body>
 </html>
   `;

@@ -23,6 +23,8 @@ import {
   requireAuth,
   type AuthenticatedRequest,
 } from './auth';
+import { sendPasswordChangeConfirmation, getLocationFromIP, getUserAgent } from './password-security-email';
+import { generatePasswordResetSuccessPage } from './password-reset-page';
 
 const router = Router();
 
@@ -316,6 +318,12 @@ router.post('/reset-password', generalLimiter, async (req, res) => {
       return res.status(400).json({ message: 'Invalid or expired reset token' });
     }
 
+    // Get user details before password change
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user) {
+      return res.status(400).json({ message: 'User not found' });
+    }
+
     const passwordHash = await hashPassword(password);
 
     await db.transaction(async (tx) => {
@@ -328,7 +336,33 @@ router.post('/reset-password', generalLimiter, async (req, res) => {
       await deleteAllUserSessions(userId);
     });
 
-    res.json({ message: 'Password reset successful' });
+    // Send security confirmation email
+    const timestamp = new Date().toLocaleString('en-US', {
+      timeZone: 'UTC',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short'
+    });
+
+    const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
+    const userAgent = req.get('User-Agent');
+
+    await sendPasswordChangeConfirmation({
+      userEmail: user.email,
+      userName: user.firstName || 'User',
+      timestamp: timestamp,
+      ipAddress: ipAddress,
+      userAgent: getUserAgent(userAgent),
+      location: getLocationFromIP(ipAddress)
+    });
+
+    // Return beautiful success page instead of JSON
+    const successPageHtml = generatePasswordResetSuccessPage();
+    res.setHeader('Content-Type', 'text/html');
+    res.send(successPageHtml);
   } catch (error) {
     console.error('Reset password error:', error);
     if (error instanceof z.ZodError) {
