@@ -1,0 +1,143 @@
+To create a highly interactive and engaging homepage with scrolling effects similar to the Apple homepage style, while integrating your HKT Crypto platform (focused on tokenized real estate and fractional ownership), we can develop a prompt for the homepage that combines smooth scrolling effects, text animations, and dynamic content based on scroll position. Below is a detailed prompt that you can use to implement such an interactive homepage, tailored to your needs.
+
+Prompt for Amazon CodeWhisperer:
+Objective:
+
+We want to create a dynamic, engaging homepage for the HKT Crypto Platform with a scrolling effect similar to the Apple homepage. The homepage should include text and images that interact with the scroll — for example, text appearing from the sides as the user scrolls, with the text scaling in size or changing as they move down the page.
+
+Prompt Details:
+Project Requirements:
+
+Interactive Scroll Animations:
+
+As the user scrolls, text should animate in from the left and right sides of the screen. The text will gradually scale down or change in appearance as the user scrolls down the page.
+
+New text blocks should appear dynamically while older text moves away or disappears, creating a smooth, progressive feel.
+
+Implement smooth scroll transitions, where the content follows the user’s scroll and stays synchronized.
+
+Scrolling Effects (Parallax + Text Transitions):
+
+The background should remain static while the foreground content (e.g., text, images) moves with the scroll. The effect should resemble a parallax scroll, where the text or elements move in relation to the user’s scrolling.
+
+Text should move with smooth animations from the sides, growing or shrinking in size depending on the scroll position. Each section will have unique text animations, such as fade-in, slide-up, or zoom-in as the user moves down.
+
+For instance, when scrolling, the first section could show an introductory text about HKT Tokens (tokenized real estate investments), and as the user scrolls, the text could shrink, move upward, and fade, replaced by another piece of content about Crypto Property Investment.
+
+Smooth Transitions:
+
+As the user scrolls, make sure there are smooth transitions between each section. This could include text sliding in from both sides or zooming in as it appears on the screen.
+
+Ensure there are no sudden jumps; everything should flow seamlessly as the page content changes.
+
+HKT Branding Integration:
+
+The branding colors of your HKT Crypto platform (e.g., Crypto-inspired neon colors, dark backgrounds, sleek fonts) should be integrated into the animation.
+
+Add a crypto-themed header that remains static as the user scrolls, but perhaps changes or has subtle animations (e.g., glowing elements, small moving particles) as the user moves through the content.
+
+HKT Token Introduction Section:
+
+The first section will introduce your HKT Tokens. As the user scrolls, show different benefits of investing in tokenized real estate. Text should come in from the right side, while the background images of properties or token symbols should move with a slight parallax effect.
+
+As the user continues scrolling, this section could change to HKT fractional ownership, explaining how users can buy fractional shares of properties.
+
+Fractional Ownership Animation:
+
+As the user scrolls further, introduce a section explaining fractional ownership through HKT. Text and iconography will animate in with a vertical scroll effect while offering a glimpse into how the HKT platform simplifies property investment.
+
+Key Features Section with Dynamic Content:
+
+A dynamic features section that highlights key features of HKT (e.g., security, transparency, fast transactions, etc.). Each feature will animate into view as the user scrolls, accompanied by interactive visuals like icons or illustrations.
+
+Code Prompt:
+js
+Copy
+Edit
+// Include GSAP (GreenSock Animation Platform) for scroll-based animations
+import gsap from 'gsap';
+
+// Scroll trigger for animated text and content transitions
+gsap.registerPlugin(ScrollTrigger);
+
+// Main Scroll Animation Function
+function initScrollAnimations() {
+    // Section 1 - Initial Scroll Animation (HKT Token Introduction)
+    gsap.from(".section-1-text", {
+        scrollTrigger: {
+            trigger: ".section-1", 
+            start: "top bottom",
+            end: "top center",
+            scrub: true,
+        },
+        x: "-100%", 
+        opacity: 0, 
+        duration: 1, 
+        ease: "power3.out"
+    });
+
+    // Section 2 - Crypto Property Investment
+    gsap.from(".section-2-text", {
+        scrollTrigger: {
+            trigger: ".section-2", 
+            start: "top bottom",
+            end: "top center",
+            scrub: true,
+        },
+        x: "100%", 
+        opacity: 0, 
+        duration: 1, 
+        ease: "power3.out"
+    });
+
+    // Section 3 - Fractional Ownership Explained
+    gsap.from(".section-3-text", {
+        scrollTrigger: {
+            trigger: ".section-3", 
+            start: "top bottom",
+            end: "top center",
+            scrub: true,
+        },
+        scale: 0.5, 
+        opacity: 0, 
+        duration: 1, 
+        ease: "power3.out"
+    });
+
+    // Key Features - Sliding Up Animations
+    gsap.from(".feature-item", {
+        scrollTrigger: {
+            trigger: ".key-features", 
+            start: "top bottom",
+            end: "top center",
+            scrub: true,
+        },
+        y: 100, 
+        opacity: 0, 
+        duration: 1, 
+        stagger: 0.2,
+        ease: "power3.out"
+    });
+
+    // Background Parallax Scrolling Effect
+    gsap.to(".background", {
+        scrollTrigger: {
+            trigger: ".background", 
+            start: "top bottom",
+            end: "bottom top",
+            scrub: true,
+        },
+        y: "50%", 
+        ease: "none"
+    });
+}
+
+// Run the animation function once page loads
+window.addEventListener("load", initScrollAnimations);
+
+// CSS for smooth scrolling and dynamic content behavior
+// These should be applied to your HTML structure
+Additional Notes:
+ScrollTrigger (GSAP): This library is essential for creating smooth scroll-based animations. You can adjust the start, end, and scrub properties based on your desired timing and scroll behavior.
+
+Content Dynamism: Ensure that sections of text change progressively with smooth transitions and parallax scrolling. The text should feel alive, shrinking and expanding in sync with the user’s scroll position.
