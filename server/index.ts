@@ -65,6 +65,35 @@ app.use('/api/auth', databaseAuthRoutes);
 app.use('/api/admin/agents', adminAgentRoutes);
 app.use('/api/admin/users', requireAdmin, adminUserRoutes);
 
+// AI Assistant endpoint
+app.post('/api/ai-assistant', async (req, res) => {
+  try {
+    const { getAIAssistance } = await import('./ai-assistant');
+    const { message, context } = req.body;
+    
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    const aiResponse = await getAIAssistance({
+      message,
+      context: {
+        currentPage: context?.currentPage,
+        userId: (req as any).user?.id,
+        userInvestments: context?.userInvestments
+      }
+    });
+
+    res.json(aiResponse);
+  } catch (error) {
+    console.error('AI Assistant error:', error);
+    res.status(500).json({ 
+      error: 'I\'m having some technical difficulties right now. Please try again in a moment or contact our support team.',
+      fallback: 'Please contact our support team for immediate help.'
+    });
+  }
+});
+
 // GET /api/agents/countries - Get list of countries with agents (MUST come before /api/agents/:slug)
 app.get('/api/agents/countries', async (req, res) => {
   try {
