@@ -1021,10 +1021,17 @@ app.post('/api/contact', async (req, res) => {
 
   // Seed database with sample data if needed
   try {
-    const { seedAgents } = await import('./seed-agents');
-    await seedAgents();
+    // Delay seeding to ensure database connection is established
+    setTimeout(async () => {
+      try {
+        const { seedAgents } = await import('./seed-agents');
+        await seedAgents();
+      } catch (error) {
+        console.log('Agent seeding skipped:', error instanceof Error ? error.message : String(error));
+      }
+    }, 2000);
   } catch (error) {
-    console.log('Agent seeding skipped:', error instanceof Error ? error.message : String(error));
+    console.log('Agent seeding setup skipped:', error instanceof Error ? error.message : String(error));
   }
 
   // Support both development and production environments

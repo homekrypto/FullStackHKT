@@ -1,8 +1,12 @@
-# Home Krypto Token (HKT) - Real Estate Investment Platform
+# Home Krypto Platform - Dual Real Estate System
 
 ## Overview
 
-This is a full-stack web application for HKT (Home Krypto Token), a blockchain-based real estate investment platform. The application allows users to invest in premium real estate through cryptocurrency tokens, providing fractional ownership of high-value property assets. Users can start investing with monthly contributions and track their portfolio growth through a comprehensive dashboard.
+This is a comprehensive full-stack real estate platform that combines two major systems:
+
+1. **HKT (Home Krypto Token) Investment Platform** - A blockchain-based real estate investment system allowing users to invest in premium real estate through cryptocurrency tokens, providing fractional ownership of high-value property assets starting from $100.
+
+2. **Real Estate Agent Management System** - A professional networking and directory platform for real estate agents featuring registration, approval workflows, country-based organization, and comprehensive agent profiles with SEO optimization.
 
 ## System Architecture
 
