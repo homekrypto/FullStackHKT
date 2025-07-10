@@ -107,27 +107,7 @@ export default function PropertyDetails() {
     );
   }
 
-  // Convert property data to match expected format
-  const propertyData = {
-    id: property.id,
-    name: property.name,
-    location: property.location,
-    images: property.images.length > 0 ? property.images : [dominican1, dominican2, dominican3, dominican4],
-    price: parseFloat(property.sharePrice) * property.totalShares,
-    tokenPrice: parseFloat(property.sharePrice),
-    sharePrice: parseFloat(property.sharePrice),
-    bedrooms: property.bedrooms,
-    bathrooms: property.bathrooms,
-    sqft: 1200, // Default value - would need to be added to schema
-    occupancyRate: 92, // Default value - would come from booking data
-    yearlyReturn: 18.5, // Default value - would be calculated
-    monthlyIncome: 487.50, // Default value - would be calculated
-    totalTokens: property.totalShares * 25000, // Assuming 25k tokens per share
-    availableTokens: property.totalShares * 25000 * 0.74, // Assuming 74% available
-    description: property.description,
-    maxGuests: property.maxGuests,
-    amenities: property.amenities
-  };
+  // Use property data directly
 
   const performanceData = [
     { month: 'Jan', occupancy: 89, income: 425.30, bookings: 28 },
@@ -164,14 +144,7 @@ export default function PropertyDetails() {
     { icon: Users, name: 'Concierge Service' }
   ];
 
-  const tokenMetrics = {
-    totalSupply: propertyData.totalTokens,
-    circulating: propertyData.totalTokens - propertyData.availableTokens,
-    yourTokens: 10156,
-    yourShare: ((10156 / propertyData.totalTokens) * 100).toFixed(3),
-    currentValue: (10156 * 0.152).toFixed(2),
-    monthlyEarnings: ((10156 / propertyData.totalTokens) * propertyData.monthlyIncome).toFixed(2)
-  };
+
 
   return (
     <div className="min-h-screen bg-white dark:bg-black py-20">
@@ -181,18 +154,18 @@ export default function PropertyDetails() {
         <div className="mb-8">
           <div className="flex items-center space-x-2 mb-4">
             <Badge className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-              Property ID: {propertyData.id}
+              Property ID: {property.id}
             </Badge>
             <Badge className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
-              {propertyData.occupancyRate}% Occupied
+              {property.isActive ? 'Active' : 'Inactive'}
             </Badge>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            {propertyData.name}
+            {property.name}
           </h1>
           <div className="flex items-center text-gray-500 dark:text-gray-400 mb-4">
             <MapPin className="h-4 w-4 mr-1" />
-            {propertyData.location}
+            {property.location}
           </div>
         </div>
 
@@ -200,11 +173,11 @@ export default function PropertyDetails() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           <div className="lg:col-span-2">
             <div className="grid grid-cols-2 gap-4">
-              {propertyData.images.map((image, index) => (
+              {(property.images.length > 0 ? property.images : [dominican1, dominican2, dominican3, dominican4]).map((image, index) => (
                 <div key={index} className="relative">
                   <img 
                     src={image} 
-                    alt={`${propertyData.name} - View ${index + 1}`}
+                    alt={`${property.name} - View ${index + 1}`}
                     className="w-full h-64 object-cover rounded-lg"
                   />
                 </div>
@@ -214,54 +187,55 @@ export default function PropertyDetails() {
           
           <Card>
             <CardHeader>
-              <CardTitle>Investment Overview</CardTitle>
+              <CardTitle>Property Investment</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">Property Value</div>
-                  <div className="text-xl font-bold">${propertyData.price.toLocaleString()}</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">Total Property Value</div>
+                  <div className="text-xl font-bold">${(parseFloat(property.sharePrice) * property.totalShares).toLocaleString()}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">Share Price</div>
-                  <div className="text-xl font-bold text-blue-600 dark:text-blue-400">${propertyData.sharePrice}</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">Price Per Share</div>
+                  <div className="text-xl font-bold text-blue-600 dark:text-blue-400">${parseFloat(property.sharePrice).toLocaleString()}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">Annual Return</div>
-                  <div className="text-xl font-bold text-green-600 dark:text-green-400">{propertyData.yearlyReturn}%</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">Total Shares</div>
+                  <div className="text-xl font-bold text-green-600 dark:text-green-400">{property.totalShares}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">Monthly Income</div>
-                  <div className="text-xl font-bold text-purple-600 dark:text-purple-400">${propertyData.monthlyIncome}</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">Price Per Night</div>
+                  <div className="text-xl font-bold text-purple-600 dark:text-purple-400">${parseFloat(property.pricePerNight)}</div>
                 </div>
               </div>
               
               <div className="pt-4 border-t">
-                <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">Your Position</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">Investment Information</div>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span>Tokens Owned:</span>
-                    <span className="font-semibold">{tokenMetrics.yourTokens.toLocaleString()}</span>
+                    <span>1 Share Ownership:</span>
+                    <span className="font-semibold">{(100 / property.totalShares).toFixed(3)}%</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Ownership Share:</span>
-                    <span className="font-semibold">{tokenMetrics.yourShare}%</span>
+                    <span>HKT Tokens Needed:</span>
+                    <span className="font-semibold">{(parseFloat(property.sharePrice) / 0.10).toLocaleString()} HKT</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Current Value:</span>
-                    <span className="font-semibold text-green-600 dark:text-green-400">${tokenMetrics.currentValue}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Monthly Earnings:</span>
-                    <span className="font-semibold text-purple-600 dark:text-purple-400">${tokenMetrics.monthlyEarnings}</span>
+                    <span>Est. Weekly Income:</span>
+                    <span className="font-semibold text-green-600 dark:text-green-400">${(parseFloat(property.pricePerNight) * 7 / property.totalShares).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
               
-              <Button className="w-full">
-                <DollarSign className="h-4 w-4 mr-2" />
-                Buy More Tokens
-              </Button>
+              <div className="space-y-2">
+                <Button className="w-full">
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  Buy 1 Share (${parseFloat(property.sharePrice).toLocaleString()} USD)
+                </Button>
+                <Button variant="outline" className="w-full">
+                  Buy with {(parseFloat(property.sharePrice) / 0.10).toLocaleString()} HKT
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -284,27 +258,27 @@ export default function PropertyDetails() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <p className="text-gray-600 dark:text-gray-300">{propertyData.description}</p>
+                    <p className="text-gray-600 dark:text-gray-300">{property.description}</p>
                     
                     <div className="grid grid-cols-3 gap-4">
                       <div className="flex items-center">
                         <Bed className="h-5 w-5 mr-2 text-gray-500" />
-                        <span>{propertyData.bedrooms} Bedrooms</span>
+                        <span>{property.bedrooms} Bedrooms</span>
                       </div>
                       <div className="flex items-center">
                         <Bath className="h-5 w-5 mr-2 text-gray-500" />
-                        <span>{propertyData.bathrooms} Bathrooms</span>
+                        <span>{property.bathrooms} Bathrooms</span>
                       </div>
                       <div className="flex items-center">
-                        <Square className="h-5 w-5 mr-2 text-gray-500" />
-                        <span>{propertyData.sqft} sqft</span>
+                        <Users className="h-5 w-5 mr-2 text-gray-500" />
+                        <span>{property.maxGuests} Guests Max</span>
                       </div>
                     </div>
                     
                     <div>
                       <h4 className="font-semibold mb-3">Amenities</h4>
                       <div className="grid grid-cols-2 gap-3">
-                        {propertyData.amenities.map((amenity, index) => (
+                        {property.amenities.map((amenity, index) => (
                           <div key={index} className="flex items-center">
                             <Check className="h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" />
                             <span className="text-sm">{amenity}</span>
@@ -318,37 +292,43 @@ export default function PropertyDetails() {
               
               <Card>
                 <CardHeader>
-                  <CardTitle>Token Distribution</CardTitle>
+                  <CardTitle>Property Agent</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between">
-                      <span className="text-gray-500 dark:text-gray-400">Total Token Supply:</span>
-                      <span className="font-semibold">{tokenMetrics.totalSupply.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500 dark:text-gray-400">Circulating Supply:</span>
-                      <span className="font-semibold">{tokenMetrics.circulating.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500 dark:text-gray-400">Available for Purchase:</span>
-                      <span className="font-semibold text-blue-600 dark:text-blue-400">{propertyData.availableTokens.toLocaleString()}</span>
-                    </div>
-                    
-                    <div className="pt-4">
-                      <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">Supply Distribution</div>
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                        <div 
-                          className="bg-blue-600 h-3 rounded-full" 
-                          style={{ width: `${(tokenMetrics.circulating / tokenMetrics.totalSupply) * 100}%` }}
-                        ></div>
+                  {property.agentName ? (
+                    <div className="space-y-3">
+                      <div className="text-center">
+                        <div className="text-lg font-semibold">{property.agentName} {property.agentLastName}</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">Local Representative for Home Krypto</div>
                       </div>
-                      <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        <span>Distributed: {((tokenMetrics.circulating / tokenMetrics.totalSupply) * 100).toFixed(1)}%</span>
-                        <span>Available: {((propertyData.availableTokens / tokenMetrics.totalSupply) * 100).toFixed(1)}%</span>
+                      
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-500 dark:text-gray-400">Location:</span>
+                          <span className="font-medium">{property.agentLocation}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500 dark:text-gray-400">Email:</span>
+                          <span className="font-medium">{property.agentEmail}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500 dark:text-gray-400">Phone:</span>
+                          <span className="font-medium">{property.agentPhone}</span>
+                        </div>
+                      </div>
+                      
+                      <Button variant="outline" className="w-full">
+                        Contact Agent
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-center py-6">
+                      <div className="text-gray-500 dark:text-gray-400 mb-4">No agent assigned to this property</div>
+                      <div className="text-sm text-gray-400 dark:text-gray-500">
+                        Contact Home Krypto support for assistance
                       </div>
                     </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
