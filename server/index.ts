@@ -58,12 +58,59 @@ import adminUserRoutes from './routes/adminUserRoutes';
 import { requireAdmin } from './admin-middleware';
 import { db } from './db-direct';
 import { agentPages, realEstateAgents } from '@shared/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 
 // Use database authentication (replaces all in-memory auth systems)
 app.use('/api/auth', databaseAuthRoutes);
 app.use('/api/admin/agents', adminAgentRoutes);
 app.use('/api/admin/users', requireAdmin, adminUserRoutes);
+
+// GET /api/agents - Get all approved agents for public directory (placed early to avoid middleware conflicts)
+app.get('/api/agents', async (req, res) => {
+  try {
+    const result = await db.execute(sql`
+      SELECT id, first_name, last_name, email, phone, company, city, state, country, 
+             bio, specializations, years_experience, languages_spoken, photo_url, 
+             website, linkedin, referral_link
+      FROM real_estate_agents 
+      WHERE status = 'approved' AND is_active = true 
+      ORDER BY first_name
+    `);
+
+    // Map snake_case to camelCase for frontend compatibility
+    const mappedAgents = result.map(agent => ({
+      id: agent.id,
+      firstName: agent.first_name,
+      lastName: agent.last_name,
+      email: agent.email,
+      phone: agent.phone,
+      company: agent.company,
+      city: agent.city,
+      state: agent.state,
+      country: agent.country,
+      bio: agent.bio,
+      specializations: agent.specializations,
+      yearsExperience: agent.years_experience,
+      languagesSpoken: agent.languages_spoken,
+      photoUrl: agent.photo_url,
+      website: agent.website,
+      linkedIn: agent.linkedin,
+      referralLink: agent.referral_link
+    }));
+
+    res.json({
+      success: true,
+      data: mappedAgents,
+      total: mappedAgents.length
+    });
+  } catch (error) {
+    console.error('Error fetching agents:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch agents' 
+    });
+  }
+});
 
 // Property management routes
 app.use('/api/property-management', (await import('./property-management-routes')).default);
@@ -149,7 +196,7 @@ app.get('/api/agents/search', async (req, res) => {
       .select()
       .from(realEstateAgents)
       .where(whereConditions)
-      .orderBy(realEstateAgents.firstName);
+      .orderBy(realEstateAgents.first_name);
 
     // Filter by search query if provided
     let filteredAgents = allAgents;
@@ -187,7 +234,7 @@ app.get('/api/agents/approved', async (req, res) => {
         eq(realEstateAgents.status, 'approved'),
         eq(realEstateAgents.isActive, true)
       ))
-      .orderBy(realEstateAgents.firstName);
+      .orderBy(realEstateAgents.first_name);
 
     res.json({
       success: true,
@@ -203,50 +250,7 @@ app.get('/api/agents/approved', async (req, res) => {
   }
 });
 
-// Public agents endpoints
-// GET /api/agents - Get all approved agents for public directory
-app.get('/api/agents', async (req, res) => {
-  try {
-    const agents = await db
-      .select({
-        id: realEstateAgents.id,
-        firstName: realEstateAgents.firstName,
-        lastName: realEstateAgents.lastName,
-        email: realEstateAgents.email,
-        phone: realEstateAgents.phone,
-        company: realEstateAgents.company,
-        city: realEstateAgents.city,
-        state: realEstateAgents.state,
-        country: realEstateAgents.country,
-        bio: realEstateAgents.bio,
-        specializations: realEstateAgents.specializations,
-        yearsExperience: realEstateAgents.yearsExperience,
-        languagesSpoken: realEstateAgents.languagesSpoken,
-        photoUrl: realEstateAgents.photoUrl,
-        website: realEstateAgents.website,
-        linkedIn: realEstateAgents.linkedIn,
-        referralLink: realEstateAgents.referralLink
-      })
-      .from(realEstateAgents)
-      .where(and(
-        eq(realEstateAgents.status, 'approved'),
-        eq(realEstateAgents.isActive, true)
-      ))
-      .orderBy(realEstateAgents.firstName);
-
-    res.json({
-      success: true,
-      data: agents,
-      total: agents.length
-    });
-  } catch (error) {
-    console.error('Error fetching agents:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to fetch agents' 
-    });
-  }
-});
+// Public agents endpoints (note: main endpoint is defined earlier to avoid middleware conflicts)
 
 // GET /api/agents/approved - Legacy endpoint for backward compatibility
 app.get('/api/agents/approved', async (req, res) => {
@@ -258,7 +262,7 @@ app.get('/api/agents/approved', async (req, res) => {
         eq(realEstateAgents.status, 'approved'),
         eq(realEstateAgents.isActive, true)
       ))
-      .orderBy(realEstateAgents.firstName);
+      .orderBy(realEstateAgents.first_name);
 
     res.json({
       success: true,
@@ -323,7 +327,7 @@ app.get('/api/agents/search', async (req, res) => {
       .select()
       .from(realEstateAgents)
       .where(whereConditions)
-      .orderBy(realEstateAgents.firstName);
+      .orderBy(realEstateAgents.first_name);
 
 
 
