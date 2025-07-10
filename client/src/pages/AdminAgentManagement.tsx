@@ -267,7 +267,7 @@ export default function AdminAgentManagement() {
                   <Avatar className="h-12 w-12">
                     <AvatarImage src={agent.profileImage} alt={`${agent.firstName} ${agent.lastName}`} />
                     <AvatarFallback>
-                      {agent.firstName[0]}{agent.lastName[0]}
+                      {agent.firstName?.[0] || 'N'}{agent.lastName?.[0] || 'A'}
                     </AvatarFallback>
                   </Avatar>
                   <div>

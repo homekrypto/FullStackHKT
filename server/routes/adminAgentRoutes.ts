@@ -104,9 +104,40 @@ router.get('/', async (req: any, res) => {
 
     console.log(`Found ${agents.length} agents`);
 
+    // Map database fields to frontend format
+    const mappedAgents = agents.map(agent => ({
+      id: agent.id,
+      firstName: agent.first_name,
+      lastName: agent.last_name,
+      email: agent.email,
+      phone: agent.phone,
+      company: agent.company,
+      licenseNumber: agent.licenseNumber,
+      licenseState: agent.licenseState,
+      city: agent.city,
+      state: agent.state,
+      zipCode: agent.zipCode,
+      country: agent.country,
+      website: agent.website,
+      linkedIn: agent.linkedIn,
+      bio: agent.bio,
+      specializations: agent.specializations,
+      yearsExperience: agent.yearsExperience,
+      languagesSpoken: agent.languagesSpoken,
+      profileImage: agent.profileImage,
+      referralLink: agent.referralLink,
+      seoBacklinkUrl: agent.seoBacklinkUrl,
+      status: agent.status,
+      isApproved: agent.isApproved,
+      isActive: agent.isActive,
+      createdAt: agent.createdAt,
+      approvedAt: agent.approvedAt,
+      rejectionReason: agent.rejectionReason
+    }));
+
     res.json({
       success: true,
-      data: agents
+      data: mappedAgents
     });
   } catch (error) {
     console.error('Error fetching agents:', error);
