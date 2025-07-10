@@ -22,7 +22,8 @@ import {
   Car,
   Coffee,
   Waves,
-  Building2
+  Building2,
+  Check
 } from 'lucide-react';
 import { useScrollToTop } from '@/hooks/useScrollToTop';
 import { useRoute } from 'wouter';
