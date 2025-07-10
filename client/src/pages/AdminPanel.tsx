@@ -136,8 +136,7 @@ export default function AdminPanel() {
   };
 
   return (
-    <AdminRoute>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div className="container mx-auto px-4">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -509,7 +508,6 @@ export default function AdminPanel() {
             </TabsContent>
           </Tabs>
         </div>
-      </div>
-    </AdminRoute>
+    </div>
   );
 }
