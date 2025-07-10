@@ -65,52 +65,9 @@ app.use('/api/auth', databaseAuthRoutes);
 app.use('/api/admin/agents', adminAgentRoutes);
 app.use('/api/admin/users', requireAdmin, adminUserRoutes);
 
-// GET /api/agents - Get all approved agents for public directory (placed early to avoid middleware conflicts)
-app.get('/api/agents', async (req, res) => {
-  try {
-    const result = await db.execute(sql`
-      SELECT id, first_name, last_name, email, phone, company, city, state, country, 
-             bio, specializations, years_experience, languages_spoken, photo_url, 
-             website, linkedin, referral_link
-      FROM real_estate_agents 
-      WHERE status = 'approved' AND is_active = true 
-      ORDER BY first_name
-    `);
-
-    // Map snake_case to camelCase for frontend compatibility
-    const mappedAgents = result.map(agent => ({
-      id: agent.id,
-      firstName: agent.first_name,
-      lastName: agent.last_name,
-      email: agent.email,
-      phone: agent.phone,
-      company: agent.company,
-      city: agent.city,
-      state: agent.state,
-      country: agent.country,
-      bio: agent.bio,
-      specializations: agent.specializations,
-      yearsExperience: agent.years_experience,
-      languagesSpoken: agent.languages_spoken,
-      photoUrl: agent.photo_url,
-      website: agent.website,
-      linkedIn: agent.linkedin,
-      referralLink: agent.referral_link
-    }));
-
-    res.json({
-      success: true,
-      data: mappedAgents,
-      total: mappedAgents.length
-    });
-  } catch (error) {
-    console.error('Error fetching agents:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to fetch agents' 
-    });
-  }
-});
+// Import and use public agent routes
+import publicAgentRoutes from './routes/publicAgentRoutes';
+app.use('/api/agents', publicAgentRoutes);
 
 // Property management routes
 app.use('/api/property-management', (await import('./property-management-routes')).default);
@@ -1069,6 +1026,8 @@ app.post('/api/contact', async (req, res) => {
   // Support both development and production environments
   // In production (Cloud Run), use PORT env var, default to 5000 for development
   const port = parseInt(process.env.PORT || '5000', 10);
+  // Duplicate endpoint removed - using the properly positioned /api/agents endpoint above
+
   const host = '0.0.0.0'; // Always bind to 0.0.0.0 for containerized deployments
   
   server.listen({
