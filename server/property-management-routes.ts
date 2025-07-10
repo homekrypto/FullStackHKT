@@ -4,7 +4,7 @@ import { requireAuth } from './auth';
 import { requireAdmin } from './admin-middleware';
 import type { AuthenticatedRequest } from './auth';
 import { db } from './db-direct';
-import { properties, propertyShares } from '@shared/schema';
+import { properties, propertyShares, realEstateAgents } from '@shared/schema';
 import { eq, and, desc } from 'drizzle-orm';
 
 const router = Router();
@@ -24,30 +24,110 @@ const createPropertySchema = z.object({
   bedrooms: z.number().min(1),
   bathrooms: z.number().min(1),
   isActive: z.boolean().optional(),
+  agentId: z.number().optional(),
 });
 
 const updatePropertySchema = createPropertySchema.partial().omit({ id: true });
 
-// Get all properties (public)
+// Get approved agents for dropdown
+router.get('/agents/approved', requireAuth, requireAdmin, async (req: AuthenticatedRequest, res) => {
+  try {
+    const approvedAgents = await db.select({
+      id: realEstateAgents.id,
+      firstName: realEstateAgents.first_name,
+      lastName: realEstateAgents.last_name,
+      email: realEstateAgents.email,
+      location: realEstateAgents.city,
+      phone: realEstateAgents.phone
+    })
+    .from(realEstateAgents)
+    .where(eq(realEstateAgents.status, 'approved'))
+    .orderBy(realEstateAgents.first_name);
+    
+    res.json(approvedAgents);
+  } catch (error) {
+    console.error('Error fetching approved agents:', error);
+    res.status(500).json({ error: 'Failed to fetch approved agents' });
+  }
+});
+
+// Get all properties (public) with agent information
 router.get('/', async (req, res) => {
   try {
+    // First get properties without join to test basic functionality
     const allProperties = await db.select().from(properties)
       .where(eq(properties.isActive, true))
       .orderBy(desc(properties.createdAt));
     
-    res.json(allProperties);
+    // Then enrich with agent data if agent IDs exist
+    const enrichedProperties = [];
+    for (const property of allProperties) {
+      let enrichedProperty = {
+        ...property,
+        agentName: null,
+        agentLastName: null,
+        agentEmail: null,
+        agentPhone: null,
+        agentLocation: null
+      };
+      
+      if (property.agentId) {
+        try {
+          const [agent] = await db.select().from(realEstateAgents)
+            .where(eq(realEstateAgents.id, property.agentId))
+            .limit(1);
+            
+          if (agent) {
+            enrichedProperty.agentName = agent.first_name;
+            enrichedProperty.agentLastName = agent.last_name;
+            enrichedProperty.agentEmail = agent.email;
+            enrichedProperty.agentPhone = agent.phone;
+            enrichedProperty.agentLocation = agent.city;
+          }
+        } catch (agentError) {
+          console.log('Could not fetch agent data for property:', property.id);
+        }
+      }
+      
+      enrichedProperties.push(enrichedProperty);
+    }
+    
+    res.json(enrichedProperties);
   } catch (error) {
     console.error('Error fetching properties:', error);
     res.status(500).json({ error: 'Failed to fetch properties' });
   }
 });
 
-// Get single property (public)
+// Get single property (public) with agent information
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const [property] = await db.select().from(properties)
-      .where(and(eq(properties.id, id), eq(properties.isActive, true)));
+    const [property] = await db.select({
+      id: properties.id,
+      name: properties.name,
+      location: properties.location,
+      description: properties.description,
+      pricePerNight: properties.pricePerNight,
+      totalShares: properties.totalShares,
+      sharePrice: properties.sharePrice,
+      images: properties.images,
+      amenities: properties.amenities,
+      maxGuests: properties.maxGuests,
+      bedrooms: properties.bedrooms,
+      bathrooms: properties.bathrooms,
+      isActive: properties.isActive,
+      agentId: properties.agentId,
+      createdAt: properties.createdAt,
+      agentName: realEstateAgents.first_name,
+      agentLastName: realEstateAgents.last_name,
+      agentEmail: realEstateAgents.email,
+      agentPhone: realEstateAgents.phone,
+      agentLocation: realEstateAgents.city
+    })
+    .from(properties)
+    .leftJoin(realEstateAgents, eq(properties.agentId, realEstateAgents.id))
+    .where(and(eq(properties.id, id), eq(properties.isActive, true)));
     
     if (!property) {
       return res.status(404).json({ error: 'Property not found' });

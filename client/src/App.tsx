@@ -34,6 +34,7 @@ import Blog from "@/pages/blog";
 import BlogPost from "@/pages/blog-post";
 import PilotPropertyShowcase from "@/pages/pilot-property-showcase";
 import Properties from "@/pages/properties";
+import PropertiesWithRealData from "@/pages/PropertiesWithRealData";
 import PropertyDetails from "@/pages/property-details";
 import SecondaryMarket from "@/pages/secondary-market";
 import Sitemap from "@/pages/sitemap";
@@ -78,7 +79,8 @@ function Router() {
       <Route path="/contact" component={Contact} />
       <Route path="/for-developers" component={ForDevelopers} />
       <Route path="/pilot-property-showcase" component={PilotPropertyShowcase} />
-      <Route path="/properties" component={Properties} />
+      <Route path="/properties" component={PropertiesWithRealData} />
+      <Route path="/properties-static" component={Properties} />
       <Route path="/property-details/:id" component={PropertyDetails} />
       <Route path="/booking/:propertyId?" component={EnhancedBookingPage} />
       <Route path="/secondary-market" component={SecondaryMarket} />

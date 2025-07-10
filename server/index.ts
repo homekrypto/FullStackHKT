@@ -66,7 +66,7 @@ app.use('/api/admin/agents', adminAgentRoutes);
 app.use('/api/admin/users', requireAdmin, adminUserRoutes);
 
 // Property management routes
-app.use('/api/properties', (await import('./property-management-routes')).default);
+app.use('/api/property-management', (await import('./property-management-routes')).default);
 
 // HKT purchase routes
 app.use('/api/hkt', (await import('./hkt-purchase-routes')).default);

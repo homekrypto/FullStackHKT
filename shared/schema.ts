@@ -240,6 +240,7 @@ export const properties = pgTable("properties", {
   bedrooms: integer("bedrooms").notNull(),
   bathrooms: integer("bathrooms").notNull(),
   isActive: boolean("is_active").default(true),
+  agentId: integer("agent_id").references(() => realEstateAgents.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -302,8 +303,8 @@ export type InsertSubscriber = z.infer<typeof insertSubscriberSchema>;
 // Real Estate Agents
 export const realEstateAgents = pgTable("real_estate_agents", {
   id: serial("id").primaryKey(),
-  firstName: varchar("first_name", { length: 100 }).notNull(),
-  lastName: varchar("last_name", { length: 100 }).notNull(),
+  first_name: varchar("first_name", { length: 100 }).notNull(),
+  last_name: varchar("last_name", { length: 100 }).notNull(),
   email: varchar("email", { length: 255 }).unique().notNull(),
   phone: varchar("phone", { length: 20 }).notNull(),
   company: varchar("company", { length: 200 }),

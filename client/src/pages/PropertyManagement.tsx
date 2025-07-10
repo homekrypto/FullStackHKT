@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -29,6 +30,7 @@ const propertySchema = z.object({
   amenities: z.string().optional(),
   images: z.string().optional(),
   isActive: z.boolean().default(true),
+  agentId: z.number().optional(),
 });
 
 type PropertyFormData = z.infer<typeof propertySchema>;
@@ -47,7 +49,22 @@ interface Property {
   bedrooms: number;
   bathrooms: number;
   isActive: boolean;
+  agentId?: number;
   createdAt: string;
+  agentName?: string;
+  agentLastName?: string;
+  agentEmail?: string;
+  agentPhone?: string;
+  agentLocation?: string;
+}
+
+interface Agent {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  location: string;
+  phone: string;
 }
 
 export default function PropertyManagement() {
@@ -72,12 +89,18 @@ export default function PropertyManagement() {
       amenities: '',
       images: '',
       isActive: true,
+      agentId: undefined,
     },
   });
 
   // Fetch properties
   const { data: properties = [], isLoading } = useQuery<Property[]>({
-    queryKey: ['/api/properties'],
+    queryKey: ['/api/property-management'],
+  });
+
+  // Fetch approved agents for dropdown
+  const { data: agents = [] } = useQuery<Agent[]>({
+    queryKey: ['/api/property-management/agents/approved'],
   });
 
   // Create property mutation
@@ -89,7 +112,7 @@ export default function PropertyManagement() {
         images: data.images ? data.images.split(',').map(i => i.trim()) : [],
       };
       
-      const response = await fetch('/api/properties', {
+      const response = await fetch('/api/property-management', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(propertyData),
@@ -103,7 +126,7 @@ export default function PropertyManagement() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/properties'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/property-management'] });
       setIsCreateDialogOpen(false);
       setEditingProperty(null);
       form.reset();
@@ -132,7 +155,7 @@ export default function PropertyManagement() {
         images: data.images ? data.images.split(',').map(i => i.trim()) : [],
       };
       
-      const response = await fetch(`/api/properties/${editingProperty.id}`, {
+      const response = await fetch(`/api/property-management/${editingProperty.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(propertyData),
@@ -146,7 +169,7 @@ export default function PropertyManagement() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/properties'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/property-management'] });
       setIsCreateDialogOpen(false);
       setEditingProperty(null);
       form.reset();
@@ -167,7 +190,7 @@ export default function PropertyManagement() {
   // Delete property mutation
   const deleteProperty = useMutation({
     mutationFn: async (propertyId: string) => {
-      const response = await fetch(`/api/properties/${propertyId}`, {
+      const response = await fetch(`/api/property-management/${propertyId}`, {
         method: 'DELETE',
       });
       
@@ -179,7 +202,7 @@ export default function PropertyManagement() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/properties'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/property-management'] });
       toast({
         title: 'Property Deleted',
         description: 'Property has been deactivated successfully.',
@@ -216,6 +239,7 @@ export default function PropertyManagement() {
       amenities: property.amenities.join(', '),
       images: property.images.join(', '),
       isActive: property.isActive,
+      agentId: property.agentId,
     });
     setIsCreateDialogOpen(true);
   };
@@ -316,6 +340,14 @@ export default function PropertyManagement() {
                         <span className="text-muted-foreground">Share Price:</span>
                         <span className="font-medium">${property.sharePrice}</span>
                       </div>
+                      {property.agentName && (
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Agent:</span>
+                          <span className="font-medium text-xs">
+                            {property.agentName} {property.agentLastName}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex gap-2 pt-2">
@@ -508,6 +540,31 @@ export default function PropertyManagement() {
                   {...form.register('images')}
                   placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="agentId">Assign Agent (Optional)</Label>
+                <Select
+                  value={form.watch('agentId')?.toString() || ''}
+                  onValueChange={(value) => {
+                    form.setValue('agentId', value ? parseInt(value) : undefined);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select an agent..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No agent assigned</SelectItem>
+                    {agents.map((agent) => (
+                      <SelectItem key={agent.id} value={agent.id.toString()}>
+                        {agent.firstName} {agent.lastName} - {agent.location}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground">
+                  Agent will be displayed as "Local Representative for Home Krypto"
+                </p>
               </div>
 
               <div className="flex items-center space-x-2">
