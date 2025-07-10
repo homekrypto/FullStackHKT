@@ -4,12 +4,23 @@ import { count } from 'drizzle-orm';
 
 export async function seedAgents() {
   try {
-    // Check if agents already exist
-    const [agentCount] = await db.select({ count: count() }).from(realEstateAgents);
-    
-    if (agentCount.count > 0) {
-      console.log(`Database already has ${agentCount.count} agents. Skipping seed.`);
+    // Check if db is available
+    if (!db) {
+      console.log('Database not available - skipping agent seeding');
       return;
+    }
+
+    // Check if agents already exist
+    const agentCountResult = await db.select({ count: count() }).from(realEstateAgents);
+    
+    if (!agentCountResult || agentCountResult.length === 0) {
+      console.log('Unable to verify agent count - proceeding with seeding');
+    } else {
+      const [agentCount] = agentCountResult;
+      if (agentCount.count > 0) {
+        console.log(`Database already has ${agentCount.count} agents. Skipping seed.`);
+        return;
+      }
     }
     
     // Insert sample agents

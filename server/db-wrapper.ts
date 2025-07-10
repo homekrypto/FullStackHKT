@@ -85,12 +85,11 @@ class DatabaseWrapper {
   private createMockDatabase() {
     console.log('Creating mock database interface for offline operation');
     this.db = {
-      select: () => ({
-        from: () => ({
-          where: () => Promise.resolve([]),
-          limit: () => Promise.resolve([]),
-          orderBy: () => Promise.resolve([])
-        })
+      select: (fields?: any) => ({
+        from: (table?: any) => {
+          const isCountQuery = fields && typeof fields === 'object' && 'count' in fields;
+          return Promise.resolve(isCountQuery ? [{ count: 0 }] : []);
+        }
       }),
       insert: (table: any) => ({
         values: (data: any) => ({

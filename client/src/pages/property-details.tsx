@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +21,8 @@ import {
   Wifi,
   Car,
   Coffee,
-  Waves
+  Waves,
+  Building2
 } from 'lucide-react';
 import { useScrollToTop } from '@/hooks/useScrollToTop';
 import { useRoute } from 'wouter';
@@ -31,28 +33,99 @@ import dominican2 from '@assets/invest-in-properties-in-punta-cana-dominican-rep
 import dominican3 from '@assets/real-estate-buy-with-crypto-scaled_1750519048071.jpg';
 import dominican4 from '@assets/invest-in-real-estate-and-cryptoo-at-same-time-scaled_1750519048072.jpg';
 
+interface Property {
+  id: string;
+  name: string;
+  location: string;
+  description: string;
+  pricePerNight: string;
+  totalShares: number;
+  sharePrice: string;
+  images: string[];
+  amenities: string[];
+  maxGuests: number;
+  bedrooms: number;
+  bathrooms: number;
+  isActive: boolean;
+  agentId?: number;
+  createdAt: string;
+  agentName?: string;
+  agentLastName?: string;
+  agentEmail?: string;
+  agentPhone?: string;
+  agentLocation?: string;
+}
+
 export default function PropertyDetails() {
   useScrollToTop();
   const [match, params] = useRoute('/property-details/:id');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  
+  const propertyId = params?.id;
 
-  const property = {
-    id: 1,
-    name: "Luxury Resort Complex - Punta Cana",
-    location: "Punta Cana, Dominican Republic",
-    images: [dominican1, dominican2, dominican3, dominican4],
-    price: 195000,
-    tokenPrice: 37500,
-    sharePrice: 3750,
-    bedrooms: 2,
-    bathrooms: 2,
-    sqft: 1200,
-    occupancyRate: 92,
-    yearlyReturn: 18.5,
-    monthlyIncome: 487.50,
-    totalTokens: 1300000,
-    availableTokens: 962500,
-    description: "Stunning luxury resort complex featuring modern villas, condos, and penthouse suites with direct beach access, world-class amenities, and exceptional rental performance in one of the Caribbean's most popular destinations."
+  // Fetch all properties and find the specific one
+  const { data: properties = [], isLoading } = useQuery<Property[]>({
+    queryKey: ['/api/property-management'],
+  });
+
+  const property = properties.find(p => p.id === propertyId);
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-black py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Loading property details...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show 404 if property not found
+  if (!property) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-black py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center py-12">
+            <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              Property Not Found
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              The property you're looking for doesn't exist or has been removed.
+            </p>
+            <Button onClick={() => window.history.back()}>
+              Go Back
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Convert property data to match expected format
+  const propertyData = {
+    id: property.id,
+    name: property.name,
+    location: property.location,
+    images: property.images.length > 0 ? property.images : [dominican1, dominican2, dominican3, dominican4],
+    price: parseFloat(property.sharePrice) * property.totalShares,
+    tokenPrice: parseFloat(property.sharePrice),
+    sharePrice: parseFloat(property.sharePrice),
+    bedrooms: property.bedrooms,
+    bathrooms: property.bathrooms,
+    sqft: 1200, // Default value - would need to be added to schema
+    occupancyRate: 92, // Default value - would come from booking data
+    yearlyReturn: 18.5, // Default value - would be calculated
+    monthlyIncome: 487.50, // Default value - would be calculated
+    totalTokens: property.totalShares * 25000, // Assuming 25k tokens per share
+    availableTokens: property.totalShares * 25000 * 0.74, // Assuming 74% available
+    description: property.description,
+    maxGuests: property.maxGuests,
+    amenities: property.amenities
   };
 
   const performanceData = [
@@ -91,12 +164,12 @@ export default function PropertyDetails() {
   ];
 
   const tokenMetrics = {
-    totalSupply: property.totalTokens,
-    circulating: property.totalTokens - property.availableTokens,
+    totalSupply: propertyData.totalTokens,
+    circulating: propertyData.totalTokens - propertyData.availableTokens,
     yourTokens: 10156,
-    yourShare: ((10156 / property.totalTokens) * 100).toFixed(3),
+    yourShare: ((10156 / propertyData.totalTokens) * 100).toFixed(3),
     currentValue: (10156 * 0.152).toFixed(2),
-    monthlyEarnings: ((10156 / property.totalTokens) * property.monthlyIncome).toFixed(2)
+    monthlyEarnings: ((10156 / propertyData.totalTokens) * propertyData.monthlyIncome).toFixed(2)
   };
 
   return (
@@ -107,18 +180,18 @@ export default function PropertyDetails() {
         <div className="mb-8">
           <div className="flex items-center space-x-2 mb-4">
             <Badge className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-              Property ID: {property.id}
+              Property ID: {propertyData.id}
             </Badge>
             <Badge className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
-              {property.occupancyRate}% Occupied
+              {propertyData.occupancyRate}% Occupied
             </Badge>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            {property.name}
+            {propertyData.name}
           </h1>
           <div className="flex items-center text-gray-500 dark:text-gray-400 mb-4">
             <MapPin className="h-4 w-4 mr-1" />
-            {property.location}
+            {propertyData.location}
           </div>
         </div>
 
@@ -126,11 +199,11 @@ export default function PropertyDetails() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           <div className="lg:col-span-2">
             <div className="grid grid-cols-2 gap-4">
-              {property.images.map((image, index) => (
+              {propertyData.images.map((image, index) => (
                 <div key={index} className="relative">
                   <img 
                     src={image} 
-                    alt={`${property.name} - View ${index + 1}`}
+                    alt={`${propertyData.name} - View ${index + 1}`}
                     className="w-full h-64 object-cover rounded-lg"
                   />
                 </div>
@@ -146,19 +219,19 @@ export default function PropertyDetails() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-sm text-gray-500 dark:text-gray-400">Property Value</div>
-                  <div className="text-xl font-bold">${property.price.toLocaleString()}</div>
+                  <div className="text-xl font-bold">${propertyData.price.toLocaleString()}</div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-500 dark:text-gray-400">Share Price</div>
-                  <div className="text-xl font-bold text-blue-600 dark:text-blue-400">${property.sharePrice}</div>
+                  <div className="text-xl font-bold text-blue-600 dark:text-blue-400">${propertyData.sharePrice}</div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-500 dark:text-gray-400">Annual Return</div>
-                  <div className="text-xl font-bold text-green-600 dark:text-green-400">{property.yearlyReturn}%</div>
+                  <div className="text-xl font-bold text-green-600 dark:text-green-400">{propertyData.yearlyReturn}%</div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-500 dark:text-gray-400">Monthly Income</div>
-                  <div className="text-xl font-bold text-purple-600 dark:text-purple-400">${property.monthlyIncome}</div>
+                  <div className="text-xl font-bold text-purple-600 dark:text-purple-400">${propertyData.monthlyIncome}</div>
                 </div>
               </div>
               
@@ -210,30 +283,30 @@ export default function PropertyDetails() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <p className="text-gray-600 dark:text-gray-300">{property.description}</p>
+                    <p className="text-gray-600 dark:text-gray-300">{propertyData.description}</p>
                     
                     <div className="grid grid-cols-3 gap-4">
                       <div className="flex items-center">
                         <Bed className="h-5 w-5 mr-2 text-gray-500" />
-                        <span>{property.bedrooms} Bedrooms</span>
+                        <span>{propertyData.bedrooms} Bedrooms</span>
                       </div>
                       <div className="flex items-center">
                         <Bath className="h-5 w-5 mr-2 text-gray-500" />
-                        <span>{property.bathrooms} Bathrooms</span>
+                        <span>{propertyData.bathrooms} Bathrooms</span>
                       </div>
                       <div className="flex items-center">
                         <Square className="h-5 w-5 mr-2 text-gray-500" />
-                        <span>{property.sqft} sqft</span>
+                        <span>{propertyData.sqft} sqft</span>
                       </div>
                     </div>
                     
                     <div>
                       <h4 className="font-semibold mb-3">Amenities</h4>
                       <div className="grid grid-cols-2 gap-3">
-                        {amenities.map((amenity, index) => (
+                        {propertyData.amenities.map((amenity, index) => (
                           <div key={index} className="flex items-center">
-                            <amenity.icon className="h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" />
-                            <span className="text-sm">{amenity.name}</span>
+                            <Check className="h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" />
+                            <span className="text-sm">{amenity}</span>
                           </div>
                         ))}
                       </div>
@@ -258,7 +331,7 @@ export default function PropertyDetails() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500 dark:text-gray-400">Available for Purchase:</span>
-                      <span className="font-semibold text-blue-600 dark:text-blue-400">{property.availableTokens.toLocaleString()}</span>
+                      <span className="font-semibold text-blue-600 dark:text-blue-400">{propertyData.availableTokens.toLocaleString()}</span>
                     </div>
                     
                     <div className="pt-4">
@@ -271,7 +344,7 @@ export default function PropertyDetails() {
                       </div>
                       <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                         <span>Distributed: {((tokenMetrics.circulating / tokenMetrics.totalSupply) * 100).toFixed(1)}%</span>
-                        <span>Available: {((property.availableTokens / tokenMetrics.totalSupply) * 100).toFixed(1)}%</span>
+                        <span>Available: {((propertyData.availableTokens / tokenMetrics.totalSupply) * 100).toFixed(1)}%</span>
                       </div>
                     </div>
                   </div>
