@@ -65,6 +65,12 @@ app.use('/api/auth', databaseAuthRoutes);
 app.use('/api/admin/agents', adminAgentRoutes);
 app.use('/api/admin/users', requireAdmin, adminUserRoutes);
 
+// Property management routes
+app.use('/api/properties', (await import('./property-management-routes')).default);
+
+// HKT purchase routes
+app.use('/api/hkt', (await import('./hkt-purchase-routes')).default);
+
 // AI Assistant endpoint
 app.post('/api/ai-assistant', async (req, res) => {
   try {

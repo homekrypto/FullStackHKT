@@ -55,6 +55,7 @@ import AgentPage from "@/pages/AgentPage";
 import EnhancedBookingPage from "@/pages/EnhancedBookingPage";
 import AdminPanel from "@/pages/AdminPanel";
 import TestAdmin from "@/pages/TestAdmin";
+import PropertyManagement from "@/pages/PropertyManagement";
 import Governance from "@/pages/governance";
 import MainnetTesting from "@/pages/MainnetTesting";
 import NotFound from "@/pages/not-found";
@@ -110,6 +111,7 @@ function Router() {
       <Route path="/admin" component={AdminPanel} />
       <Route path="/admin/agents" component={AdminAgentManagement} />
       <Route path="/admin/users" component={AdminUserManagement} />
+      <Route path="/admin/properties" component={PropertyManagement} />
       <Route path="/test-admin" component={TestAdmin} />
       <Route path="/download" component={DownloadPage} />
       <Route component={NotFound} />
