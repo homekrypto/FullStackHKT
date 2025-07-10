@@ -545,16 +545,16 @@ export default function PropertyManagement() {
               <div className="space-y-2">
                 <Label htmlFor="agentId">Assign Agent (Optional)</Label>
                 <Select
-                  value={form.watch('agentId')?.toString() || 'none'}
+                  value={form.watch('agentId')?.toString() || ''}
                   onValueChange={(value) => {
-                    form.setValue('agentId', value === 'none' ? undefined : parseInt(value));
+                    form.setValue('agentId', value ? parseInt(value) : undefined);
                   }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select an agent..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">No agent assigned</SelectItem>
+                    <SelectItem value="">No agent assigned</SelectItem>
                     {agents.map((agent) => (
                       <SelectItem key={agent.id} value={agent.id.toString()}>
                         {agent.firstName} {agent.lastName} - {agent.location}

@@ -57,7 +57,7 @@ import adminAgentRoutes from './routes/adminAgentRoutes';
 import adminUserRoutes from './routes/adminUserRoutes';
 import { requireAdmin } from './admin-middleware';
 import { db } from './db-direct';
-import { agentPages, realEstateAgents, sessions } from '@shared/schema';
+import { agentPages, realEstateAgents } from '@shared/schema';
 import { eq, and, sql } from 'drizzle-orm';
 
 // Use database authentication (replaces all in-memory auth systems)
@@ -764,49 +764,6 @@ app.post('/api/subscribe', async (req, res) => {
   }
 });
 
-// Simple admin login endpoint for testing/development
-app.post('/api/admin/login', async (req, res) => {
-  try {
-    const { password } = req.body;
-    
-    // Simple password check for admin access
-    if (password !== 'admin123') {
-      return res.status(401).json({ message: 'Invalid admin password' });
-    }
-    
-    // Create session for admin user (ID: 1)
-    const token = 'admin-session-' + Date.now();
-    await db.delete(sessions).where(eq(sessions.userId, 1)); // Remove old sessions
-    
-    await db.insert(sessions).values({
-      userId: 1,
-      token: token,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
-    });
-
-    // Set session cookie
-    res.cookie('sessionToken', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-      path: '/',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    });
-
-    res.json({ 
-      message: 'Admin login successful',
-      user: { 
-        id: 1, 
-        email: 'admin@homekrypto.com', 
-        role: 'admin' 
-      }
-    });
-  } catch (error) {
-    console.error('Admin login error:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
 // Health check endpoint for deployment
 app.get('/api/health', (req, res) => {
   res.status(200).json({ 
@@ -888,151 +845,6 @@ app.post('/api/contact', async (req, res) => {
 
     res.status(status).json({ message });
     throw err;
-  });
-
-  // Server-side admin login page
-  app.get('/admin-login', (req, res) => {
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - HomeKrypto</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .login-container {
-            background: white;
-            padding: 2rem;
-            border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 400px;
-        }
-        .logo {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        .logo h1 {
-            color: #667eea;
-            font-size: 2rem;
-            font-weight: 700;
-        }
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #374151;
-            font-weight: 500;
-        }
-        input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.2s;
-        }
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        .btn {
-            width: 100%;
-            padding: 0.75rem;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .btn:hover {
-            background: #5a6fd8;
-        }
-        .error {
-            color: #dc2626;
-            margin-top: 0.5rem;
-            font-size: 0.875rem;
-        }
-        .success {
-            color: #059669;
-            margin-top: 0.5rem;
-            font-size: 0.875rem;
-        }
-    </style>
-</head>
-<body>
-    <div class="login-container">
-        <div class="logo">
-            <h1>HomeKrypto</h1>
-            <p>Admin Panel Login</p>
-        </div>
-        
-        <form id="adminLoginForm">
-            <div class="form-group">
-                <label for="password">Admin Password</label>
-                <input type="password" id="password" name="password" required 
-                       placeholder="Enter admin password">
-            </div>
-            
-            <button type="submit" class="btn">
-                Login to Admin Panel
-            </button>
-            
-            <div id="message"></div>
-        </form>
-    </div>
-    
-    <script>
-        document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const password = document.getElementById('password').value;
-            const messageDiv = document.getElementById('message');
-            
-            try {
-                const response = await fetch('/api/admin/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ password }),
-                    credentials: 'include'
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    messageDiv.innerHTML = '<div class="success">✓ Login successful! Redirecting...</div>';
-                    setTimeout(() => {
-                        window.location.href = '/admin';
-                    }, 1000);
-                } else {
-                    messageDiv.innerHTML = '<div class="error">✗ ' + data.message + '</div>';
-                }
-            } catch (error) {
-                messageDiv.innerHTML = '<div class="error">✗ Login failed. Please try again.</div>';
-            }
-        });
-    </script>
-</body>
-</html>`;
-    
-    res.setHeader('Content-Type', 'text/html');
-    res.send(html);
   });
 
   // Server-side rendered password reset page
