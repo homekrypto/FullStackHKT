@@ -503,10 +503,10 @@ app.post('/api/agents/register', uploadAgentPhoto, async (req, res) => {
       referralLink = `homekrypto.com/agent/${base}-${randomSuffix}`;
     }
 
-    // Prepare agent data for database
+    // Prepare agent data for database (map frontend fields to database column names)
     const dbAgentData = {
-      firstName: agentData.firstName || 'New',
-      lastName: agentData.lastName || 'Agent', 
+      first_name: agentData.firstName || 'New',
+      last_name: agentData.lastName || 'Agent', 
       email: agentData.email.toLowerCase().trim(),
       phone: agentData.phone || '+1-000-000-0000',
       company: agentData.company || null,
